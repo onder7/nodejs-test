@@ -219,24 +219,24 @@
 <body>
     <div class="login-modal" id="loginModal">
         <div class="login-content">
-            <h2>≡ƒöÉ Admin Giri┼ƒi</h2>
-            <p style="margin-bottom: 20px; color: #666;">Admin kullanıcı ad─▒n─▒z─▒ girin</p>
-            <input type="text" id="adminUsername" placeholder="kullanıcı ad─▒ (admin veya onder7)">
-            <button onclick="adminLogin()">Giri┼ƒ Yap</button>
+            <h2>🔐 Admin Girişi</h2>
+            <p style="margin-bottom: 20px; color: #666;">Admin kullanıcı adınızı girin</p>
+            <input type="text" id="adminUsername" placeholder="Kullanıcı adı (admin veya onder7)">
+            <button onclick="adminLogin()">Giriş Yap</button>
         </div>
     </div>
 
     <div class="admin-container" id="adminPanel" style="display: none;">
         <div class="header">
-            <h1>≡ƒ¢í∩╕Å Admin Kontrol Paneli</h1>
-            <p style="color: #666;">Ho┼ƒ geldin, <span id="adminName"></span>!</p>
+            <h1>🛡️ Admin Kontrol Paneli</h1>
+            <p style="color: #666;">Hoş geldin, <span id="adminName"></span>!</p>
         </div>
 
         <div id="alertContainer"></div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Toplam kullanıcı</h3>
+                <h3>Toplam Kullanıcı</h3>
                 <div class="value" id="totalUsers">0</div>
             </div>
             <div class="stat-card">
@@ -244,26 +244,26 @@
                 <div class="value" id="totalMessages">0</div>
             </div>
             <div class="stat-card">
-                <h3>Yasakl─▒ kullanıcı</h3>
+                <h3>Yasaklı Kullanıcı</h3>
                 <div class="value" id="bannedCount">0</div>
             </div>
             <div class="stat-card">
-                <h3>Susturulmu┼ƒ</h3>
+                <h3>Susturulmuş</h3>
                 <div class="value" id="mutedCount">0</div>
             </div>
         </div>
 
         <div style="margin-bottom: 20px;">
-            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('users')">≡ƒæÑ kullanıcılar</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('users')">👥 Kullanıcılar</button>
             <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('chat')">💬 Sohbet</button>
-            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('logs')">≡ƒôï Loglar</button>
-            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px;" onclick="showTab('sessions')">≡ƒöÉ Oturumlar</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('logs')">📋 Loglar</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px;" onclick="showTab('sessions')">🔐 Oturumlar</button>
         </div>
 
         <div id="usersTab" class="tab-content">
             <div class="content-grid">
                 <div class="panel">
-                    <h2>≡ƒæÑ Online kullanıcılar</h2>
+                    <h2>👥 Online Kullanıcılar</h2>
                     <div class="user-list" id="userList"></div>
                 </div>
 
@@ -291,18 +291,18 @@
 
         <div id="logsTab" class="tab-content" style="display: none;">
             <div class="panel">
-                <h2>≡ƒôï Aktivite Loglar─▒</h2>
+                <h2>📋 Aktivite Logları</h2>
                 <div style="margin-bottom: 15px; display: flex; gap: 10px;">
                     <select id="logTypeFilter" style="padding: 8px; border-radius: 5px; border: 2px solid #eee;">
                         <option value="">Tüm Tipler</option>
                         <option value="auth">Kimlik Doğrulama</option>
                         <option value="message">Mesajlar</option>
-                        <option value="admin">Admin ─░┼ƒlemleri</option>
+                        <option value="admin">Admin İşlemleri</option>
                         <option value="system">Sistem</option>
                     </select>
-                    <input type="text" id="logUserFilter" placeholder="kullanıcı ara..." style="padding: 8px; border-radius: 5px; border: 2px solid #eee; flex: 1;">
+                    <input type="text" id="logUserFilter" placeholder="Kullanıcı ara..." style="padding: 8px; border-radius: 5px; border: 2px solid #eee; flex: 1;">
                     <button class="btn" style="background: #667eea; color: white; padding: 8px 20px; border-radius: 5px;" onclick="filterLogs()">Filtrele</button>
-                    <button class="btn" style="background: #4caf50; color: white; padding: 8px 20px; border-radius: 5px;" onclick="exportLogs()">≡ƒôÑ D─▒┼ƒa Aktar</button>
+                    <button class="btn" style="background: #4caf50; color: white; padding: 8px 20px; border-radius: 5px;" onclick="exportLogs()">📥 Dışa Aktar</button>
                 </div>
                 <div class="message-list" id="logList" style="max-height: 600px;"></div>
             </div>
@@ -311,7 +311,7 @@
         <div id="sessionsTab" class="tab-content" style="display: none;">
             <div class="content-grid">
                 <div class="panel">
-                    <h2>≡ƒöÉ Aktif Oturumlar</h2>
+                    <h2>🔐 Aktif Oturumlar</h2>
                     <div class="user-list" id="sessionList"></div>
                 </div>
 
@@ -331,12 +331,12 @@
         function adminLogin() {
             const username = document.getElementById("adminUsername").value.trim();
             if (!username) {
-                showAlert("L├╝tfen kullanıcı ad─▒ girin!", "error");
+                showAlert("Lütfen kullanıcı adı girin!", "error");
                 return;
             }
 
             adminUsername = username;
-            socket.emit("setUsername", { username, avatar: "≡ƒææ" });
+            socket.emit("setUsername", { username, avatar: "🛡️" });
         }
 
         socket.on("adminStatus", (status) => {
@@ -390,20 +390,20 @@
         }
         
         function deleteRoom(roomId, roomName) {
-            if (confirm(`"${roomName}" odas─▒n─▒ silmek istedi─ƒinizden emin misiniz?\n\nOdadaki t├╝m kullanıcılar genel odaya ta┼ƒ─▒nacak.`)) {
+            if (confirm(`"${roomName}" odasını silmek istediğinizden emin misiniz?\n\nOdadaki tüm kullanıcılar genel odaya taşınacak.`)) {
                 socket.emit("deleteRoom", roomId);
             }
         }
         
         function renameRoom(roomId, oldName) {
-            const newName = prompt(`"${oldName}" odas─▒n─▒n yeni ad─▒:`, oldName);
+            const newName = prompt(`"${oldName}" odasının yeni adı:`, oldName);
             if (newName && newName.trim() !== oldName) {
                 socket.emit("renameRoom", { roomId, newName: newName.trim() });
             }
         }
         
         function clearChatHistory() {
-            if (confirm("T├£M SOHBET GE├çM─░┼₧─░N─░ S─░LMEK ─░STED─░─₧─░N─░ZDEN EM─░N M─░S─░N─░Z?\n\nBu i┼ƒlem geri al─▒namaz!")) {
+            if (confirm("TÜM SOHBET GEÇMİŞİNİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ?\n\nBu işlem geri alınamaz!")) {
                 socket.emit("clearChatHistory");
             }
         }
@@ -434,7 +434,7 @@
                     link.href = url;
                     link.download = `chat-logs-${new Date().toISOString()}.json`;
                     link.click();
-                    showAlert("Loglar ba┼ƒar─▒yla d─▒┼ƒa aktar─▒ld─▒!", "success");
+                    showAlert("Loglar başarıyla dışa aktarıldı!", "success");
                 })
                 .catch(err => showAlert("Hata: " + err.message, "error"));
         }
@@ -455,7 +455,7 @@
                 };
                 
                 const typeIcons = {
-                    auth: "≡ƒöÉ",
+                    auth: "🔐",
                     message: "💬",
                     admin: "🛡️",
                     system: "⚙️"
@@ -464,7 +464,7 @@
                 div.innerHTML = `
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                            <span style="font-size: 20px;">${typeIcons[log.type] || "≡ƒô¥"}</span>
+                            <span style="font-size: 20px;">${typeIcons[log.type] || "📝"}</span>
                             <span style="background: ${typeColors[log.type]}; color: white; padding: 2px 8px; border-radius: 5px; font-size: 11px;">${log.type.toUpperCase()}</span>
                             <strong>${log.user}</strong>
                             <span style="color: #999; font-size: 12px;">${log.action}</span>
@@ -497,7 +497,7 @@
                             ${session.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                         </div>
                         <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                            Giri┼ƒ: ${session.loginTime}<br>
+                            Giriş: ${session.loginTime}<br>
                             Son Aktivite: ${session.lastActivity}<br>
                             IP: ${session.ip}<br>
                             Oda: ${session.room}
@@ -549,7 +549,7 @@
                         <button class="btn btn-warn" onclick="warnUser('${user.id}', '${user.username}')">⚠️</button>
                         <button class="btn btn-mute" onclick="muteUser('${user.id}', '${user.username}')">🔇</button>
                         <button class="btn btn-kick" onclick="kickUser('${user.id}', '${user.username}')">👢</button>
-                        <button class="btn btn-ban" onclick="banUser('${user.id}', '${user.username}')">≡ƒÜ½</button>
+                        <button class="btn btn-ban" onclick="banUser('${user.id}', '${user.username}')">🚫</button>
                     </div>
                 `;
                 userList.appendChild(div);
@@ -562,7 +562,7 @@
             document.getElementById("bannedCount").textContent = stats.bannedCount;
             document.getElementById("mutedCount").textContent = stats.mutedCount;
 
-            // Odalar─▒ g├╢ster
+            // Odaları göster
             const roomList = document.getElementById("roomList");
             roomList.innerHTML = "";
             stats.roomStats.forEach(room => {
@@ -581,7 +581,7 @@
                 roomList.appendChild(div);
             });
 
-            // Son mesajlar─▒ g├╢ster
+            // Son mesajları göster
             const messageList = document.getElementById("messageList");
             messageList.innerHTML = "";
             stats.recentMessages.reverse().forEach(msg => {
@@ -604,7 +604,7 @@
 
         socket.on("chatHistoryCleared", () => {
             const messageList = document.getElementById("messageList");
-            messageList.innerHTML = '<div class="system-message" style="text-align: center; padding: 20px; color: #999;">Sohbet ge├ºmi┼ƒi temizlendi</div>';
+            messageList.innerHTML = '<div class="system-message" style="text-align: center; padding: 20px; color: #999;">Sohbet geçmişi temizlendi</div>';
         });
         
         socket.on("roomDeleted", (message) => {
@@ -612,28 +612,28 @@
         });
 
         function warnUser(userId, username) {
-            const reason = prompt(`${username} kullanıcıs─▒na uyar─▒ nedeni:`);
+            const reason = prompt(`${username} kullanıcısına uyarı nedeni:`);
             if (reason) {
                 socket.emit("adminAction", { action: "warn", targetId: userId, reason });
             }
         }
 
         function muteUser(userId, username) {
-            const duration = prompt(`${username} kullanıcıs─▒n─▒ ka├º saniye susturmak istiyorsunuz?`, "300");
+            const duration = prompt(`${username} kullanıcısını kaç saniye susturmak istiyorsunuz?`, "300");
             if (duration) {
                 socket.emit("adminAction", { action: "mute", targetId: userId, duration: parseInt(duration) * 1000 });
             }
         }
 
         function kickUser(userId, username) {
-            if (confirm(`${username} kullanıcıs─▒n─▒ atmak istedi─ƒinizden emin misiniz?`)) {
+            if (confirm(`${username} kullanıcısını atmak istediğinizden emin misiniz?`)) {
                 const reason = prompt("Atma nedeni:");
                 socket.emit("adminAction", { action: "kick", targetId: userId, reason });
             }
         }
 
         function banUser(userId, username) {
-            if (confirm(`${username} kullanıcıs─▒n─▒ KALICI olarak yasaklamak istedi─ƒinizden emin misiniz?`)) {
+            if (confirm(`${username} kullanıcısını KALICI olarak yasaklamak istediğinizden emin misiniz?`)) {
                 const reason = prompt("Yasaklama nedeni:");
                 socket.emit("adminAction", { action: "ban", targetId: userId, reason });
             }

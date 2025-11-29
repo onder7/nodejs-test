@@ -12,21 +12,21 @@
 <body>
     <div class="modal" id="usernameModal">
         <div class="modal-content">
-            <h2>≡ Hoş Geldiniz!</h2>
+            <h2>👋 Hoş Geldiniz!</h2>
             <p>Profil bilgilerinizi girin:</p>
-            <input type="text" id="usernameInput" placeholder="kullanıcı ad─▒n─▒z..." maxlength="20">
-            <p style="margin: 10px 0; font-size: 14px;">Avatar se├ºin:</p>
+            <input type="text" id="usernameInput" placeholder="Kullanıcı adınız..." maxlength="20">
+            <p style="margin: 10px 0; font-size: 14px;">Avatar seçin:</p>
             <div class="avatar-picker" id="avatarPicker"></div>
-            <button id="usernameBtn">Sohbete Kat─▒l</button>
+            <button id="usernameBtn">Sohbete Katıl</button>
         </div>
     </div>
 
     <div class="notification" id="notification"></div>
 
     <div class="voice-call-modal" id="voiceCallModal">
-        <div class="voice-call-avatar" id="voiceCallAvatar">≡</div>
-        <div class="voice-call-name" id="voiceCallName">kullanıcı</div>
-        <div class="voice-call-status" id="voiceCallStatus">Aran─▒yor...</div>
+        <div class="voice-call-avatar" id="voiceCallAvatar">👤</div>
+        <div class="voice-call-name" id="voiceCallName">Kullanıcı</div>
+        <div class="voice-call-status" id="voiceCallStatus">Aranıyor...</div>
         <div class="voice-call-buttons" id="voiceCallButtons">
             <button class="voice-btn voice-btn-accept" id="acceptCallBtn" style="display: none;">📞</button>
             <button class="voice-btn voice-btn-reject" id="rejectCallBtn">❌</button>
@@ -34,22 +34,22 @@
     </div>
 
     <div class="voice-indicator" id="voiceIndicator">
-        <span>≡</span>
-        <span id="voiceIndicatorText">Sesli g├╢r├╝┼ƒme aktif</span>
-        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">≡</button>
-        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">≡╡</button>
+        <span>📞</span>
+        <span id="voiceIndicatorText">Sesli görüşme aktif</span>
+        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">�</bbutton>
+        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">❌</button>
     </div>
 
     <div class="dm-modal" id="dmModal">
         <div class="dm-content">
             <div class="dm-header">
-                <h3 id="dmTitle">≡¼ ├Özel Mesaj</h3>
-                <button class="dm-close" onclick="closeDM()">├</button>
+                <h3 id="dmTitle">💬 Özel Mesaj</h3>
+                <button class="dm-close" onclick="closeDM()">×</button>
             </div>
             <div class="dm-messages" id="dmMessages"></div>
             <div class="dm-input-area">
                 <div class="dm-input-group">
-                    <input type="text" class="dm-input" id="dmInput" placeholder="├Özel mesajınızı yazın...">
+                    <input type="text" class="dm-input" id="dmInput" placeholder="Özel mesajınızı yazın...">
                     <button id="dmSendBtn" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer;">Gönder</button>
                 </div>
             </div>
@@ -72,8 +72,8 @@
         <div class="container">
             <div class="header">
                 <div class="header-left">
-                    <h1 id="roomTitle">≡¼ Genel</h1>
-                    <div class="online">≡ Online: <span id="userCount">0</span> kullanıcı</div>
+                    <h1 id="roomTitle">💬 Genel</h1>
+                    <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
                 </div>
                 <div class="header-right">
                     <div class="user-info-header" id="userInfoHeader" style="display: none;">
@@ -81,13 +81,13 @@
                         <span class="username" id="headerUsername">kullanıcı</span>
                     </div>
                     <input type="file" id="fileInput" class="file-upload" accept="image/*">
-                    <button class="file-btn" id="fileBtn" title="Dosya Gönder">≡Ä</button>
-                    <button class="theme-toggle" id="themeToggle">≡</button>
+                    <button class="file-btn" id="fileBtn" title="Dosya Gönder">📎</button>
+                    <button class="theme-toggle" id="themeToggle">🌙</button>
                 </div>
             </div>
             
             <div class="messages" id="messages">
-                <div class="system-message">Chat'e Hoş Geldiniz! ≡</div>
+                <div class="system-message">Chat'e Hoş Geldiniz! 👋</div>
             </div>
             
             <div class="typing-indicator" id="typingIndicator"></div>
@@ -96,8 +96,8 @@
             
             <div class="input-area">
                 <div class="input-group">
-                    <button class="emoji-btn" id="emojiBtn">≡</button>
-                    <input type="text" id="messageInput" placeholder="Mesaj─▒n─▒z─▒ yaz─▒n..." maxlength="500">
+                    <button class="emoji-btn" id="emojiBtn">😊</button>
+                    <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." maxlength="500">
                     <button id="sendBtn">Gönder</button>
                 </div>
             </div>
@@ -127,13 +127,13 @@
         let typingTimer;
         let username = "";
         let userColor = "#667eea";
-        let selectedAvatar = "≡";
+        let selectedAvatar = "👤";
         let currentRoom = "genel";
         let editingMessageId = null;
         let currentDMTarget = null;
         let isAdmin = false;
         
-        // WebRTC de─ƒi┼ƒkenleri
+        // WebRTC değişkenleri
         let localStream = null;
         let peerConnection = null;
         let currentCallTarget = null;
@@ -145,7 +145,7 @@
             ]
         };
         
-        // Avatar se├ºenekleri
+        // Avatar seçenekleri
         const avatars = ["👤", "😊", "😎", "🤓", "🥳", "🤠", "👨‍💻", "👩‍💻", "🧑‍🎨", "🦸", "🧙", "🐱", "🐶", "🦊", "🐼", "🦁"];
         
         avatars.forEach(avatar => {
@@ -157,7 +157,7 @@
                 div.classList.add("selected");
                 selectedAvatar = avatar;
             };
-            if (avatar === "≡") div.classList.add("selected");
+            if (avatar === "👤") div.classList.add("selected");
             avatarPicker.appendChild(div);
         });
         
@@ -227,7 +227,7 @@
             // Header'da kullanıcı bilgisini g├╢ster
             updateHeaderUserInfo();
             
-            showNotification(`Tekrar ho┼ƒ geldin, ${username}! ≡`);
+            showNotification(`Tekrar hoş geldin, ${username}! 👋`);
         });
 
         // Header'da kullanıcı bilgisini g├╝ncelle
@@ -268,13 +268,13 @@
         
         setTimeout(() => usernameInput.focus(), 100);
         
-        // ├ç─▒k─▒┼ƒ yap butonu ekle (header'a)
+        // Çıkış yap butonu ekle (header'a)
         const logoutBtn = document.createElement("button");
         logoutBtn.className = "theme-toggle";
-        logoutBtn.textContent = "≡ƒÜ¬";
-        logoutBtn.title = "├ç─▒k─▒┼ƒ Yap";
+        logoutBtn.textContent = "🚪";
+        logoutBtn.title = "Çıkış Yap";
         logoutBtn.onclick = () => {
-            if (confirm("├ç─▒k─▒┼ƒ yapmak istedi─ƒinizden emin misiniz?")) {
+            if (confirm("Çıkış yapmak istediğinizden emin misiniz?")) {
                 socket.emit("logout");
                 localStorage.clear();
                 window.location.reload();
@@ -323,7 +323,7 @@
                 if (!msgEl.querySelector(".message-edited")) {
                     const editedTag = document.createElement("div");
                     editedTag.className = "message-edited";
-                    editedTag.textContent = "(d├╝zenlendi)";
+                    editedTag.textContent = "(düzenlendi)";
                     msgEl.appendChild(editedTag);
                 }
             }
@@ -336,7 +336,7 @@
 
         socket.on("userTyping", (data) => {
             if (data.typing) {
-                typingIndicator.textContent = `${data.username} yaz─▒yor...`;
+                typingIndicator.textContent = `${data.username} yazıyor...`;
             } else {
                 typingIndicator.textContent = "";
             }
@@ -357,8 +357,8 @@
                 div.onclick = () => {
                     socket.emit("joinRoom", room.id);
                     currentRoom = room.id;
-                    messagesDiv.innerHTML = '<div class="system-message">Odaya Hoş Geldiniz! ≡</div>';
-                    roomTitle.textContent = `≡¼ ${room.name}`;
+                    messagesDiv.innerHTML = '<div class="system-message">Odaya Hoş Geldiniz! 👋</div>';
+                    roomTitle.textContent = `💬 ${room.name}`;
                 };
                 roomList.appendChild(div);
             });
@@ -384,7 +384,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px;">
                         ${user.unreadCount > 0 ? `<span class="unread-badge">${user.unreadCount}</span>` : ''}
-                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">≡</button>
+                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">📞</button>
                     </div>
                 `;
                 div.onclick = () => openDM(user.id, user.username);
@@ -394,12 +394,12 @@
 
         function openDM(userId, username) {
             currentDMTarget = userId;
-            document.getElementById("dmTitle").textContent = `≡¼ ${username}`;
+            document.getElementById("dmTitle").textContent = `💬 ${username}`;
             document.getElementById("dmModal").classList.add("show");
             document.getElementById("dmMessages").innerHTML = "";
             document.getElementById("dmInput").focus();
             
-            // Mesaj ge├ºmi┼ƒini y├╝kle
+            // Mesaj geçmişini yükle
             socket.emit("getPrivateMessages", userId);
         }
 
@@ -417,12 +417,12 @@
         });
 
         socket.on("privateMessage", (data) => {
-            // E─ƒer DM penceresi a├º─▒ksa ve do─ƒru ki┼ƒiyse mesaj─▒ ekle
+            // Eğer DM penceresi açıksa ve doğru kişiyse mesajı ekle
             if (currentDMTarget === data.senderSocketId || currentDMTarget === data.targetSocketId) {
                 addDMMessage(data);
             }
             
-            // Online kullanıcı listesini g├╝ncelle
+            // Online kullanıcı listesini güncelle
             socket.emit("getOnlineUsers");
         });
 
@@ -456,7 +456,7 @@
             dmMessages.appendChild(msgDiv);
             dmMessages.scrollTop = dmMessages.scrollHeight;
             
-            // Mesaj─▒ okundu olarak i┼ƒaretle
+            // Mesajı okundu olarak işaretle
             if (!isMe) {
                 socket.emit("markAsRead", data.id);
             }
@@ -488,8 +488,8 @@
         socket.on("adminStatus", (status) => {
             isAdmin = status;
             if (isAdmin) {
-                showNotification("≡ƒ¢í∩╕Å Admin yetkileriniz aktif!");
-                // Header'da admin badge'i g├╢ster
+                showNotification("🛡️ Admin yetkileriniz aktif!");
+                // Header'da admin badge'i göster
                 updateHeaderUserInfo();
             }
         });
@@ -500,16 +500,16 @@
         });
 
         socket.on("banned", (reason) => {
-            alert("≡ƒÜ½ " + reason);
+            alert("🚫 " + reason);
             window.location.href = "about:blank";
         });
 
         socket.on("muted", (reason) => {
-            showNotification("≡ " + reason);
+            showNotification("🔇 " + reason);
         });
 
         socket.on("unmuted", (reason) => {
-            showNotification("≡ƒöè " + reason);
+            showNotification("🔊 " + reason);
         });
 
         socket.on("warning", (reason) => {
@@ -519,11 +519,11 @@
         socket.on("roomDeleted", (message) => {
             showNotification(message);
             currentRoom = "genel";
-            roomTitle.textContent = "≡¼ Genel";
+            roomTitle.textContent = "💬 Genel";
         });
 
         socket.on("chatHistoryCleared", () => {
-            messagesDiv.innerHTML = '<div class="system-message">Sohbet ge├ºmi┼ƒi admin taraf─▒ndan temizlendi</div>';
+            messagesDiv.innerHTML = '<div class="system-message">Sohbet geçmişi admin tarafından temizlendi</div>';
         });
 
         // Mesaj Gönder
@@ -583,7 +583,7 @@
                     </div>
                 </div>
                 <div class="message-text">${escapeHtml(data.message)}</div>
-                ${data.edited ? '<div class="message-edited">(d├╝zenlendi)</div>' : ''}
+                ${data.edited ? '<div class="message-edited">(düzenlendi)</div>' : ''}
             `;
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -594,12 +594,12 @@
         function editMessage(id, message) {
             editingMessageId = id;
             messageInput.value = message;
-            sendBtn.textContent = "G├╝ncelle";
+            sendBtn.textContent = "Güncelle";
             messageInput.focus();
         }
 
         function deleteMessage(id) {
-            if (confirm("Bu mesaj─▒ silmek istedi─ƒinizden emin misiniz?")) {
+            if (confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
                 socket.emit("deleteMessage", id);
             }
         }
@@ -618,7 +618,7 @@
             return div.innerHTML;
         }
 
-        // Online kullanıcılar─▒ periyodik g├╝ncelle
+        // Online kullanıcıları periyodik güncelle
         setInterval(() => {
             socket.emit("getOnlineUsers");
         }, 5000);
@@ -632,7 +632,7 @@
                 // Mikrofon izni al
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 
-                // Peer connection olu┼ƒtur
+                // Peer connection oluştur
                 peerConnection = new RTCPeerConnection(configuration);
                 
                 // Local stream'i ekle
@@ -640,7 +640,7 @@
                     peerConnection.addTrack(track, localStream);
                 });
                 
-                // ICE candidate olay─▒
+                // ICE candidate olayı
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
                         socket.emit("ice-candidate", {
@@ -650,29 +650,29 @@
                     }
                 };
                 
-                // Remote stream geldi─ƒinde
+                // Remote stream geldiğinde
                 peerConnection.ontrack = (event) => {
                     const remoteAudio = new Audio();
                     remoteAudio.srcObject = event.streams[0];
                     remoteAudio.play();
                 };
                 
-                // Offer olu┼ƒtur
+                // Offer oluştur
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 
-                // Offer'─▒ Gönder
+                // Offer'ı Gönder
                 socket.emit("voice-offer", {
                     targetId: userId,
                     offer: offer
                 });
                 
-                // Arama modal─▒n─▒ g├╢ster
-                showCallModal(username, avatar, "Aran─▒yor...", false);
+                // Arama modalını göster
+                showCallModal(username, avatar, "Aranıyor...", false);
                 
             } catch (error) {
-                console.error("Sesli arama ba┼ƒlat─▒lamad─▒:", error);
-                showNotification("Mikrofon eri┼ƒimi reddedildi veya hata olu┼ƒtu!");
+                console.error("Sesli arama başlatılamadı:", error);
+                showNotification("Mikrofon erişimi reddedildi veya hata oluştu!");
             }
         }
         
@@ -681,7 +681,7 @@
             const { from, fromUsername, fromAvatar, offer } = data;
             currentCallTarget = from;
             
-            showCallModal(fromUsername, fromAvatar, "Sizi ar─▒yor...", true);
+            showCallModal(fromUsername, fromAvatar, "Sizi arıyor...", true);
             
             // Accept butonu
             document.getElementById("acceptCallBtn").onclick = async () => {
@@ -689,7 +689,7 @@
                     // Mikrofon izni al
                     localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                     
-                    // Peer connection olu┼ƒtur
+                    // Peer connection oluştur
                     peerConnection = new RTCPeerConnection(configuration);
                     
                     // Local stream'i ekle
@@ -697,7 +697,7 @@
                         peerConnection.addTrack(track, localStream);
                     });
                     
-                    // ICE candidate olay─▒
+                    // ICE candidate olayı
                     peerConnection.onicecandidate = (event) => {
                         if (event.candidate) {
                             socket.emit("ice-candidate", {
@@ -707,7 +707,7 @@
                         }
                     };
                     
-                    // Remote stream geldi─ƒinde
+                    // Remote stream geldiğinde
                     peerConnection.ontrack = (event) => {
                         const remoteAudio = new Audio();
                         remoteAudio.srcObject = event.streams[0];
@@ -717,23 +717,23 @@
                     // Remote description ayarla
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
                     
-                    // Answer olu┼ƒtur
+                    // Answer oluştur
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
                     
-                    // Answer'─▒ Gönder
+                    // Answer'ı Gönder
                     socket.emit("voice-answer", {
                         targetId: from,
                         answer: answer
                     });
                     
-                    // G├╢r├╝┼ƒme ba┼ƒlad─▒
+                    // Görüşme başladı
                     hideCallModal();
                     showVoiceIndicator(fromUsername);
                     
                 } catch (error) {
                     console.error("Arama kabul edilemedi:", error);
-                    showNotification("Mikrofon eri┼ƒimi reddedildi!");
+                    showNotification("Mikrofon erişimi reddedildi!");
                     endVoiceCall();
                 }
             };
@@ -759,10 +759,10 @@
             }
         });
         
-        // Arama sonland─▒
+        // Arama sonlandı
         socket.on("voice-call-ended", () => {
             endVoiceCall();
-            showNotification("G├╢r├╝┼ƒme sonland─▒r─▒ld─▒");
+            showNotification("Görüşme sonlandırıldı");
         });
         
         function showCallModal(name, avatar, status, showAccept) {
@@ -778,7 +778,7 @@
         }
         
         function showVoiceIndicator(name) {
-            document.getElementById("voiceIndicatorText").textContent = `${name} ile g├╢r├╝┼ƒme`;
+            document.getElementById("voiceIndicatorText").textContent = `${name} ile görüşme`;
             document.getElementById("voiceIndicator").classList.add("show");
         }
         
@@ -793,19 +793,19 @@
                 localStream = null;
             }
             
-            // Peer connection'─▒ kapat
+            // Peer connection'ı kapat
             if (peerConnection) {
                 peerConnection.close();
                 peerConnection = null;
             }
             
-            // Kar┼ƒ─▒ tarafa bildir
+            // Karşı tarafa bildir
             if (currentCallTarget) {
                 socket.emit("end-voice-call", currentCallTarget);
                 currentCallTarget = null;
             }
             
-            // UI'─▒ temizle
+            // UI'ı temizle
             hideCallModal();
             hideVoiceIndicator();
             isMuted = false;
@@ -817,7 +817,7 @@
                 if (audioTrack) {
                     audioTrack.enabled = !audioTrack.enabled;
                     isMuted = !audioTrack.enabled;
-                    document.getElementById("muteBtn").textContent = isMuted ? "≡" : "≡";
+                    document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
                 }
             }
         }
