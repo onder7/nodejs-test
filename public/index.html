@@ -3,647 +3,1091 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gelişmiş Chat Uygulaması</title>
+    <title>CyberChat Terminal</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;700&display=swap');
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Roboto Mono', monospace;
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(circle at 25% 25%, #00ff9f 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, #ff006e 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #8338ec 0%, transparent 50%);
+            background-size: 100% 100%;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background 0.3s;
+            transition: all 0.5s ease;
+            position: relative;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 159, 0.03) 2px,
+                rgba(0, 255, 159, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
         body.dark-mode {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: #000;
+            background-image: 
+                radial-gradient(circle at 25% 25%, #ff0080 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, #0080ff 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #ff8000 0%, transparent 50%);
         }
+        
         .main-container {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             width: 95%;
             max-width: 1200px;
             height: 90vh;
+            z-index: 2;
         }
+        
         .sidebar {
-            background: white;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 2px solid #00ff9f;
+            border-radius: 0;
             width: 250px;
             padding: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            transition: background 0.3s;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 159, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
             overflow-y: auto;
-        }
-        body.dark-mode .sidebar {
-            background: #0f3460;
-        }
-        .sidebar h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        body.dark-mode .sidebar h3 {
-            color: #8b9cff;
-        }
-        .room-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .room-item:hover {
-            background: #f0f0f0;
-        }
-        body.dark-mode .room-item:hover {
-            background: #16213e;
-        }
-        .room-item.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .room-badge {
-            background: rgba(255,255,255,0.3);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-        .user-item {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: background 0.2s;
             position: relative;
         }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff9f, #ff006e, #8338ec, #00ff9f);
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+        
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        body.dark-mode .sidebar {
+            border-color: #ff0080;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 128, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar h3 {
+            color: #00ff9f;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 159, 0.8);
+        }
+        
+        body.dark-mode .sidebar h3 {
+            color: #ff0080;
+            text-shadow: 0 0 10px rgba(255, 0, 128, 0.8);
+        }
+        
+        .room-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 255, 159, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 255, 159, 0.05);
+            color: #00ff9f;
+            font-weight: 400;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .room-item::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 159, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .room-item:hover::before {
+            left: 100%;
+        }
+        
+        .room-item:hover {
+            background: rgba(0, 255, 159, 0.1);
+            border-color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.3);
+        }
+        
+        body.dark-mode .room-item {
+            border-color: rgba(255, 0, 128, 0.3);
+            background: rgba(255, 0, 128, 0.05);
+            color: #ff0080;
+        }
+        
+        body.dark-mode .room-item:hover {
+            background: rgba(255, 0, 128, 0.1);
+            border-color: #ff0080;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.3);
+        }
+        
+        .room-item.active {
+            background: linear-gradient(135deg, rgba(0, 255, 159, 0.3), rgba(255, 0, 110, 0.3));
+            color: white;
+            border-color: #00ff9f;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
+        }
+        
+        .room-badge {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff9f;
+            color: #00ff9f;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .user-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(131, 56, 236, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(131, 56, 236, 0.05);
+            color: #8338ec;
+        }
+        
         .user-item:hover {
-            background: #f0f0f0;
+            background: rgba(131, 56, 236, 0.1);
+            border-color: #8338ec;
+            box-shadow: 0 0 15px rgba(131, 56, 236, 0.3);
         }
+        
+        body.dark-mode .user-item {
+            border-color: rgba(0, 128, 255, 0.3);
+            background: rgba(0, 128, 255, 0.05);
+            color: #0080ff;
+        }
+        
         body.dark-mode .user-item:hover {
-            background: #16213e;
+            background: rgba(0, 128, 255, 0.1);
+            border-color: #0080ff;
+            box-shadow: 0 0 15px rgba(0, 128, 255, 0.3);
         }
+        
         .user-info-left {
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        
         .user-avatar {
             font-size: 24px;
+            filter: drop-shadow(0 0 5px currentColor);
         }
+        
         .user-name {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         body.dark-mode .user-name {
             color: #e0e0e0;
         }
+        
         .admin-badge {
-            background: #ffc107;
-            color: white;
+            background: linear-gradient(45deg, #ff006e, #00ff9f);
+            color: black;
             padding: 2px 6px;
-            border-radius: 5px;
-            font-size: 10px;
+            font-size: 9px;
             margin-left: 5px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            animation: pulse 2s infinite;
         }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
         .unread-badge {
-            background: #f44336;
+            background: linear-gradient(45deg, #ff006e, #ff4081);
             color: white;
             padding: 2px 8px;
-            border-radius: 10px;
             font-size: 11px;
             font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            border: 1px solid #ff006e;
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
         }
+        
         .dm-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
         }
+        
         .dm-modal.show {
             display: flex;
         }
+        
         .dm-content {
-            background: white;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #8338ec;
             width: 90%;
             max-width: 600px;
             height: 80vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 0 30px rgba(131, 56, 236, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         body.dark-mode .dm-content {
-            background: #0f3460;
+            border-color: #0080ff;
+            box-shadow: 
+                0 0 30px rgba(0, 128, 255, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         .dm-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #8338ec, #00ff9f);
+            color: black;
             padding: 20px;
-            border-radius: 20px 20px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        
         .dm-header h3 {
-            font-size: 20px;
+            font-size: 18px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
+        
         .dm-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff006e;
+            color: #ff006e;
             width: 35px;
             height: 35px;
-            border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
+        
+        .dm-close:hover {
+            background: #ff006e;
+            color: black;
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.8);
+        }
+        
         .dm-messages {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #f5f5f5;
+            background: rgba(0, 0, 0, 0.8);
         }
+        
         body.dark-mode .dm-messages {
-            background: #16213e;
+            background: rgba(0, 0, 0, 0.9);
         }
+        
         .dm-input-area {
             padding: 20px;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            border-top: 1px solid #eee;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #8338ec;
         }
+        
         body.dark-mode .dm-input-area {
-            background: #0f3460;
-            border-top: 1px solid #1a1a2e;
+            border-top-color: #0080ff;
         }
+        
         .dm-input-group {
             display: flex;
             gap: 10px;
         }
+        
         .dm-input {
             flex: 1;
             padding: 12px 15px;
-            border: 2px solid #eee;
-            border-radius: 25px;
+            border: 2px solid #8338ec;
+            background: rgba(0, 0, 0, 0.8);
+            color: #8338ec;
             font-size: 15px;
             outline: none;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.3s ease;
         }
+        
+        .dm-input:focus {
+            border-color: #00ff9f;
+            color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+        }
+        
         body.dark-mode .dm-input {
-            background: #16213e;
-            border-color: #1a1a2e;
-            color: white;
+            border-color: #0080ff;
+            color: #0080ff;
         }
+        
+        body.dark-mode .dm-input:focus {
+            border-color: #ff0080;
+            color: #ff0080;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+        }
+        
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: white;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #00ff9f;
+            color: #00ff9f;
             padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             display: none;
             z-index: 3000;
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.5s ease;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.8);
         }
+        
         .notification.show {
             display: block;
         }
+        
         body.dark-mode .notification {
-            background: #0f3460;
-            color: white;
+            border-color: #ff0080;
+            color: #ff0080;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
         }
+        
         .voice-call-modal {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #00ff9f;
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             z-index: 3000;
             display: none;
             text-align: center;
             min-width: 300px;
+            box-shadow: 
+                0 0 50px rgba(0, 255, 159, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         body.dark-mode .voice-call-modal {
-            background: #0f3460;
-            color: white;
+            border-color: #ff0080;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 128, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         .voice-call-modal.show {
             display: block;
         }
+        
         .voice-call-avatar {
             font-size: 64px;
             margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px #00ff9f);
+            animation: pulse 2s infinite;
         }
+        
         .voice-call-name {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
+            color: #00ff9f;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
+        
+        body.dark-mode .voice-call-name {
+            color: #ff0080;
+        }
+        
         .voice-call-status {
-            color: #999;
+            color: #8338ec;
             margin-bottom: 20px;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 400;
         }
+        
         .voice-call-buttons {
             display: flex;
             gap: 15px;
             justify-content: center;
         }
+        
         .voice-btn {
             width: 60px;
             height: 60px;
-            border-radius: 50%;
-            border: none;
+            border: 2px solid;
             font-size: 24px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+            font-family: monospace;
         }
+        
         .voice-btn:hover {
             transform: scale(1.1);
         }
+        
         .voice-btn-accept {
-            background: #4caf50;
-            color: white;
+            border-color: #00ff9f;
+            color: #00ff9f;
         }
+        
+        .voice-btn-accept:hover {
+            background: #00ff9f;
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.8);
+        }
+        
         .voice-btn-reject {
-            background: #f44336;
-            color: white;
+            border-color: #ff006e;
+            color: #ff006e;
         }
+        
+        .voice-btn-reject:hover {
+            background: #ff006e;
+            color: black;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.8);
+        }
+        
         .voice-btn-end {
-            background: #f44336;
-            color: white;
+            border-color: #ff006e;
+            color: #ff006e;
         }
+        
+        .voice-btn-end:hover {
+            background: #ff006e;
+            color: black;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.8);
+        }
+        
         .voice-btn-mute {
-            background: #ff9800;
-            color: white;
+            border-color: #ff8000;
+            color: #ff8000;
         }
+        
+        .voice-btn-mute:hover {
+            background: #ff8000;
+            color: black;
+            box-shadow: 0 0 20px rgba(255, 128, 0, 0.8);
+        }
+        
         .voice-indicator {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: #4caf50;
-            color: white;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #00ff9f;
+            color: #00ff9f;
             padding: 15px 20px;
-            border-radius: 50px;
             display: none;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 159, 0.8);
             z-index: 2500;
-            animation: pulse 2s infinite;
+            animation: voicePulse 2s infinite;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         .voice-indicator.show {
             display: flex;
         }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5); }
-            50% { box-shadow: 0 5px 30px rgba(76, 175, 80, 0.8); }
+        
+        @keyframes voicePulse {
+            0%, 100% { 
+                box-shadow: 0 0 30px rgba(0, 255, 159, 0.8);
+                border-color: #00ff9f;
+            }
+            50% { 
+                box-shadow: 0 0 50px rgba(0, 255, 159, 1);
+                border-color: #ff006e;
+            }
         }
+        
         .voice-icon-btn {
-            background: #4caf50;
-            border: none;
-            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff9f;
+            color: #00ff9f;
             width: 35px;
             height: 35px;
-            border-radius: 50%;
             cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.3s;
+            font-size: 14px;
+            transition: all 0.3s ease;
             margin-left: 5px;
+            font-family: monospace;
         }
+        
         .voice-icon-btn:hover {
-            transform: scale(1.1);
+            background: #00ff9f;
+            color: black;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.8);
         }
+        
         .container {
             flex: 1;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 2px solid #ff006e;
+            box-shadow: 
+                0 0 30px rgba(255, 0, 110, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
         }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff006e, #8338ec, #00ff9f, #ff006e);
+            z-index: -1;
+            animation: borderGlow 4s linear infinite;
+        }
+        
         body.dark-mode .container {
-            background: #0f3460;
+            border-color: #0080ff;
+            box-shadow: 
+                0 0 30px rgba(0, 128, 255, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #ff006e, #8338ec, #00ff9f);
+            color: black;
             padding: 20px;
-            border-radius: 20px 20px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .header-left h1 { font-size: 24px; margin-bottom: 5px; }
-        .online { font-size: 14px; opacity: 0.9; }
+        
+        .header-left h1 { 
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .online { 
+            font-size: 12px;
+            opacity: 0.8;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
         .user-info-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             padding: 8px 15px;
-            border-radius: 20px;
             font-size: 14px;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            color: white;
         }
+        
         .user-info-header:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(0, 0, 0, 0.9);
+            border-color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
         }
+        
         .user-info-header .avatar {
             font-size: 20px;
+            filter: drop-shadow(0 0 5px currentColor);
         }
+        
         .user-info-header .username {
-            font-weight: 600;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 5px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         .header-right {
             display: flex;
             gap: 10px;
             align-items: center;
         }
+        
         .theme-toggle, .file-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
             width: 40px;
             height: 40px;
-            border-radius: 50%;
             cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.3s;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
+        
         .theme-toggle:hover, .file-btn:hover {
-            transform: scale(1.1);
+            border-color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+            background: rgba(0, 0, 0, 0.9);
         }
+        
         .messages {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #f5f5f5;
-            transition: background 0.3s;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
         }
+        
         body.dark-mode .messages {
-            background: #16213e;
+            background: rgba(0, 0, 0, 0.9);
         }
+        
         .message {
-            background: white;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 255, 159, 0.3);
             padding: 12px 15px;
             margin-bottom: 10px;
-            border-radius: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            animation: slideIn 0.3s ease;
-            transition: background 0.3s;
+            animation: slideIn 0.5s ease;
+            transition: all 0.3s ease;
             position: relative;
+            color: #00ff9f;
         }
+        
         body.dark-mode .message {
-            background: #0f3460;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border-color: rgba(255, 0, 128, 0.3);
+            color: #ff0080;
         }
+        
         .message.private {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
+            background: rgba(255, 0, 110, 0.1);
+            border-left: 4px solid #ff006e;
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
         }
+        
         body.dark-mode .message.private {
-            background: #3d3520;
-            border-left: 4px solid #ffc107;
+            background: rgba(0, 128, 255, 0.1);
+            border-left: 4px solid #0080ff;
+            box-shadow: 0 0 10px rgba(0, 128, 255, 0.3);
         }
+        
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0;
+                transform: translateX(-20px);
+                filter: blur(5px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(0);
+                filter: blur(0);
+            }
         }
+        
         .message-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 5px;
-            font-size: 12px;
-            color: #666;
+            font-size: 11px;
+            color: rgba(131, 56, 236, 0.8);
+            font-family: 'Roboto Mono', monospace;
         }
+        
         body.dark-mode .message-header {
-            color: #aaa;
+            color: rgba(0, 128, 255, 0.8);
         }
+        
         .message-user {
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         .message-actions {
             display: none;
             gap: 5px;
         }
+        
         .message:hover .message-actions {
             display: flex;
         }
+        
         .message-btn {
-            background: none;
-            border: none;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #8338ec;
+            color: #8338ec;
             cursor: pointer;
-            font-size: 14px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
+            font-size: 12px;
+            padding: 4px 8px;
+            transition: all 0.2s ease;
         }
+        
         .message-btn:hover {
-            opacity: 1;
+            background: #8338ec;
+            color: black;
+            box-shadow: 0 0 10px rgba(131, 56, 236, 0.8);
         }
-        .message-text { color: #333; font-size: 15px; word-wrap: break-word; }
-        body.dark-mode .message-text {
-            color: #e0e0e0;
+        
+        .message-text { 
+            color: inherit;
+            font-size: 15px;
+            word-wrap: break-word;
+            font-family: 'Roboto Mono', monospace;
+            line-height: 1.4;
         }
+        
         .message-edited {
-            font-size: 11px;
-            color: #999;
+            font-size: 10px;
+            color: rgba(131, 56, 236, 0.6);
             font-style: italic;
             margin-top: 3px;
+            font-family: 'Roboto Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+        
         .system-message {
             text-align: center;
-            color: #999;
-            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
             margin: 10px 0;
             font-style: italic;
+            font-family: 'Roboto Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
         }
-        body.dark-mode .system-message {
-            color: #666;
-        }
+        
         .typing-indicator {
-            color: #667eea;
-            font-size: 13px;
+            color: #00ff9f;
+            font-size: 12px;
             padding: 10px 20px;
             font-style: italic;
+            font-family: 'Roboto Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: pulse 1.5s infinite;
         }
+        
+        body.dark-mode .typing-indicator {
+            color: #ff0080;
+        }
+        
         .input-area {
             padding: 20px;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            border-top: 1px solid #eee;
-            transition: background 0.3s;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #ff006e;
+            transition: all 0.3s ease;
         }
+        
         body.dark-mode .input-area {
-            background: #0f3460;
-            border-top: 1px solid #1a1a2e;
+            border-top-color: #0080ff;
         }
+        
         .input-group {
             display: flex;
             gap: 10px;
         }
+        
         #messageInput {
             flex: 1;
             padding: 12px 15px;
-            border: 2px solid #eee;
-            border-radius: 25px;
+            border: 2px solid #ff006e;
+            background: rgba(0, 0, 0, 0.8);
             font-size: 15px;
             outline: none;
-            transition: border 0.3s, background 0.3s, color 0.3s;
+            transition: all 0.3s ease;
+            color: #ff006e;
+            font-family: 'Roboto Mono', monospace;
         }
+        
         #messageInput:focus {
-            border-color: #667eea;
+            border-color: #00ff9f;
+            color: #00ff9f;
+            box-shadow: 0 0 20px rgba(0, 255, 159, 0.5);
         }
+        
         body.dark-mode #messageInput {
-            background: #16213e;
-            border-color: #1a1a2e;
-            color: white;
+            border-color: #0080ff;
+            color: #0080ff;
         }
+        
         body.dark-mode #messageInput:focus {
-            border-color: #667eea;
+            border-color: #ff0080;
+            color: #ff0080;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
         }
+        
         #sendBtn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff006e, #8338ec);
             color: white;
             border: none;
             padding: 12px 25px;
-            border-radius: 25px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.5);
         }
+        
         #sendBtn:hover {
-            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.8);
+            transform: translateY(-2px);
         }
+        
         #sendBtn:active {
-            transform: scale(0.95);
+            transform: translateY(0);
         }
+        
         .emoji-btn {
-            background: #f0f0f0;
-            border: none;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #8338ec;
             padding: 12px 15px;
-            border-radius: 25px;
             cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.2s;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
+        
         body.dark-mode .emoji-btn {
-            background: #16213e;
+            border-color: #ff8000;
         }
+        
         .emoji-btn:hover {
-            transform: scale(1.05);
+            border-color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
         }
+        
         .emoji-picker {
             position: absolute;
             bottom: 80px;
             right: 20px;
-            background: white;
-            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #8338ec;
             padding: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 0 30px rgba(131, 56, 236, 0.8);
             display: none;
             max-width: 300px;
             flex-wrap: wrap;
             gap: 5px;
             z-index: 100;
         }
+        
         body.dark-mode .emoji-picker {
-            background: #0f3460;
+            border-color: #ff8000;
+            box-shadow: 0 0 30px rgba(255, 128, 0, 0.8);
         }
+        
         .emoji-picker.show {
             display: flex;
         }
+        
         .emoji-picker span {
             font-size: 24px;
             cursor: pointer;
             padding: 5px;
-            border-radius: 5px;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            filter: drop-shadow(0 0 5px rgba(131, 56, 236, 0.5));
         }
+        
         .emoji-picker span:hover {
-            background: #f0f0f0;
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 10px #00ff9f);
         }
-        body.dark-mode .emoji-picker span:hover {
-            background: #16213e;
-        }
+        
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
+        
         .modal-content {
-            background: white;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #00ff9f;
             padding: 30px;
-            border-radius: 20px;
             text-align: center;
             max-width: 400px;
             width: 90%;
+            box-shadow: 
+                0 0 50px rgba(0, 255, 159, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         body.dark-mode .modal-content {
-            background: #0f3460;
-            color: white;
+            border-color: #ff0080;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 128, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
+        
         .modal h2 {
             margin-bottom: 20px;
-            color: #667eea;
+            color: #00ff9f;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(0, 255, 159, 0.8);
         }
+        
+        body.dark-mode .modal h2 {
+            color: #ff0080;
+            text-shadow: 0 0 10px rgba(255, 0, 128, 0.8);
+        }
+        
+        .modal p {
+            color: #8338ec;
+            font-family: 'Roboto Mono', monospace;
+            margin-bottom: 20px;
+        }
+        
         .modal input, .modal textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #eee;
-            border-radius: 10px;
+            border: 2px solid #8338ec;
+            background: rgba(0, 0, 0, 0.8);
+            color: #8338ec;
             font-size: 16px;
             margin-bottom: 15px;
             outline: none;
-            font-family: inherit;
+            font-family: 'Roboto Mono', monospace;
+            transition: all 0.3s ease;
         }
+        
+        .modal input:focus, .modal textarea:focus {
+            border-color: #00ff9f;
+            color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+        }
+        
         body.dark-mode .modal input, body.dark-mode .modal textarea {
-            background: #16213e;
-            border-color: #1a1a2e;
-            color: white;
+            border-color: #0080ff;
+            color: #0080ff;
         }
+        
+        body.dark-mode .modal input:focus, body.dark-mode .modal textarea:focus {
+            border-color: #ff0080;
+            color: #ff0080;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+        }
+        
         .modal button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #00ff9f, #8338ec);
+            color: black;
             border: none;
             padding: 12px 30px;
-            border-radius: 25px;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
             margin: 5px;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
         }
+        
+        .modal button:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 159, 0.8);
+            transform: translateY(-2px);
+        }
+        
         .avatar-picker {
             display: flex;
             flex-wrap: wrap;
@@ -651,36 +1095,58 @@
             justify-content: center;
             margin-bottom: 15px;
         }
+        
         .avatar-option {
             font-size: 32px;
             cursor: pointer;
             padding: 10px;
-            border-radius: 10px;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            filter: drop-shadow(0 0 5px rgba(131, 56, 236, 0.5));
         }
+        
         .avatar-option:hover, .avatar-option.selected {
-            background: #f0f0f0;
+            border-color: #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px #00ff9f);
         }
+        
         body.dark-mode .avatar-option:hover, body.dark-mode .avatar-option.selected {
-            background: #16213e;
+            border-color: #ff0080;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
         }
+        
         .file-upload {
             display: none;
         }
+        
         .file-preview {
             max-width: 200px;
             max-height: 200px;
-            border-radius: 10px;
             margin-top: 10px;
+            border: 2px solid #00ff9f;
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
         }
+        
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
+                gap: 15px;
             }
             .sidebar {
                 width: 100%;
                 height: auto;
                 max-height: 200px;
+            }
+            body::before {
+                background: repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 159, 0.03) 2px,
+                    rgba(0, 255, 159, 0.03) 4px
+                );
             }
         }
     </style>
@@ -688,12 +1154,12 @@
 <body>
     <div class="modal" id="usernameModal">
         <div class="modal-content">
-            <h2>👋 Hoş Geldiniz!</h2>
-            <p>Profil bilgilerinizi girin:</p>
-            <input type="text" id="usernameInput" placeholder="Kullanıcı adınız..." maxlength="20">
-            <p style="margin: 10px 0; font-size: 14px;">Avatar seçin:</p>
+            <h2>⚡ CYBER CONNECT ⚡</h2>
+            <p>Enter your neural interface credentials:</p>
+            <input type="text" id="usernameInput" placeholder="USERNAME_INPUT..." maxlength="20">
+            <p style="margin: 10px 0; font-size: 14px; color: #00ff9f; text-transform: uppercase;">SELECT_AVATAR.EXE</p>
             <div class="avatar-picker" id="avatarPicker"></div>
-            <button id="usernameBtn">Sohbete Katıl</button>
+            <button id="usernameBtn">INITIATE CONNECTION</button>
         </div>
     </div>
 
@@ -701,8 +1167,8 @@
 
     <div class="voice-call-modal" id="voiceCallModal">
         <div class="voice-call-avatar" id="voiceCallAvatar">👤</div>
-        <div class="voice-call-name" id="voiceCallName">Kullanıcı</div>
-        <div class="voice-call-status" id="voiceCallStatus">Aranıyor...</div>
+        <div class="voice-call-name" id="voiceCallName">USER</div>
+        <div class="voice-call-status" id="voiceCallStatus">CONNECTING...</div>
         <div class="voice-call-buttons" id="voiceCallButtons">
             <button class="voice-btn voice-btn-accept" id="acceptCallBtn" style="display: none;">📞</button>
             <button class="voice-btn voice-btn-reject" id="rejectCallBtn">❌</button>
@@ -711,22 +1177,22 @@
 
     <div class="voice-indicator" id="voiceIndicator">
         <span>🎤</span>
-        <span id="voiceIndicatorText">Sesli görüşme aktif</span>
-        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">🔇</button>
-        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">📵</button>
+        <span id="voiceIndicatorText">VOICE LINK ACTIVE</span>
+        <button class="voice-btn-mute" style="width: 35px; height: 35px; border: 2px solid; cursor: pointer; margin-left: 10px; background: rgba(0,0,0,0.8);" id="muteBtn">🔇</button>
+        <button class="voice-btn-end" style="width: 35px; height: 35px; border: 2px solid; cursor: pointer; background: rgba(0,0,0,0.8);" id="endCallBtn">📵</button>
     </div>
 
     <div class="dm-modal" id="dmModal">
         <div class="dm-content">
             <div class="dm-header">
-                <h3 id="dmTitle">💬 Özel Mesaj</h3>
+                <h3 id="dmTitle">💬 PRIVATE CHANNEL</h3>
                 <button class="dm-close" onclick="closeDM()">×</button>
             </div>
             <div class="dm-messages" id="dmMessages"></div>
             <div class="dm-input-area">
                 <div class="dm-input-group">
-                    <input type="text" class="dm-input" id="dmInput" placeholder="Özel mesajınızı yazın...">
-                    <button id="dmSendBtn" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer;">Gönder</button>
+                    <input type="text" class="dm-input" id="dmInput" placeholder="ENCRYPTED_MESSAGE_INPUT...">
+                    <button id="dmSendBtn" style="background: linear-gradient(135deg, #8338ec, #00ff9f); color: black; border: none; padding: 12px 25px; cursor: pointer; font-family: 'Orbitron', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">TRANSMIT</button>
                 </div>
             </div>
         </div>
@@ -734,31 +1200,31 @@
 
     <div class="main-container">
         <div class="sidebar">
-            <h3>📁 Odalar</h3>
+            <h3>📡 CHANNELS</h3>
             <div id="roomList"></div>
-            <h3 style="margin-top: 20px;">👥 Online Kullanıcılar</h3>
+            <h3 style="margin-top: 20px;">👥 NEURAL LINKS</h3>
             <div id="userList"></div>
         </div>
 
         <div class="container">
             <div class="header">
                 <div class="header-left">
-                    <h1 id="roomTitle">💬 Genel</h1>
-                    <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
+                    <h1 id="roomTitle">💬 GENERAL.CHAN</h1>
+                    <div class="online">🔴 ACTIVE_NODES: <span id="userCount">0</span></div>
                 </div>
                 <div class="header-right">
                     <div class="user-info-header" id="userInfoHeader" style="display: none;">
                         <span class="avatar" id="headerAvatar">👤</span>
-                        <span class="username" id="headerUsername">Kullanıcı</span>
+                        <span class="username" id="headerUsername">USER</span>
                     </div>
                     <input type="file" id="fileInput" class="file-upload" accept="image/*">
-                    <button class="file-btn" id="fileBtn" title="Dosya Gönder">📎</button>
+                    <button class="file-btn" id="fileBtn" title="UPLOAD_FILE">📎</button>
                     <button class="theme-toggle" id="themeToggle">🌙</button>
                 </div>
             </div>
             
             <div class="messages" id="messages">
-                <div class="system-message">Chat'e hoş geldiniz! 👋</div>
+                <div class="system-message">SYSTEM: CONNECTION ESTABLISHED 👋</div>
             </div>
             
             <div class="typing-indicator" id="typingIndicator"></div>
@@ -768,14 +1234,15 @@
             <div class="input-area">
                 <div class="input-group">
                     <button class="emoji-btn" id="emojiBtn">😊</button>
-                    <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." maxlength="500">
-                    <button id="sendBtn">Gönder</button>
+                    <input type="text" id="messageInput" placeholder="ENTER_MESSAGE.TXT..." maxlength="500">
+                    <button id="sendBtn">TRANSMIT</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // JavaScript kodu aynı kalacak, sadece bazı metinler değişti
         const socket = io();
         const messagesDiv = document.getElementById("messages");
         const messageInput = document.getElementById("messageInput");
@@ -816,8 +1283,8 @@
             ]
         };
         
-        // Avatar seçenekleri
-        const avatars = ["👤", "😊", "😎", "🤓", "🥳", "🤠", "👨‍💻", "👩‍💻", "🧑‍🎨", "🦸", "🧙", "🐱", "🐶", "🦊", "🐼", "🦁"];
+        // Avatar seçenekleri - Cyberpunk teması
+        const avatars = ["🤖", "👾", "🔮", "⚡", "🌐", "💾", "🎯", "🎮", "🔥", "💀", "🦾", "🧠", "🔬", "⚙️", "💎", "🚀"];
         
         avatars.forEach(avatar => {
             const div = document.createElement("div");
@@ -828,12 +1295,12 @@
                 div.classList.add("selected");
                 selectedAvatar = avatar;
             };
-            if (avatar === "👤") div.classList.add("selected");
+            if (avatar === "🤖") div.classList.add("selected");
             avatarPicker.appendChild(div);
         });
         
-        // Emoji listesi
-        const emojis = ["😊", "😂", "❤️", "👍", "🎉", "🔥", "✨", "💯", "🚀", "👋", "😍", "🤔", "😎", "🙌", "💪", "🎯", "⚡", "🌟", "💡", "🎊"];
+        // Emoji listesi - Cyberpunk teması
+        const emojis = ["⚡", "🔥", "💎", "🚀", "🎯", "🎮", "💾", "🌐", "🔮", "👾", "🤖", "💀", "⚙️", "🔬", "🧠", "🦾", "💥", "✨", "🌟", "💫"];
         
         emojis.forEach(emoji => {
             const span = document.createElement("span");
@@ -877,7 +1344,7 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = `<img src="${e.target.result}" class="file-preview">`;
-                    socket.emit("chatMessage", `[Resim] ${img}`);
+                    socket.emit("chatMessage", `[DATA_PACKET] ${img}`);
                 };
                 reader.readAsDataURL(file);
             }
@@ -898,7 +1365,7 @@
             // Header'da kullanıcı bilgisini göster
             updateHeaderUserInfo();
             
-            showNotification(`Tekrar hoş geldin, ${username}! 👋`);
+            showNotification(`SYSTEM: WELCOME BACK ${username.toUpperCase()} ⚡`);
         });
 
         // Header'da kullanıcı bilgisini güncelle
@@ -909,9 +1376,9 @@
             
             if (username) {
                 headerAvatar.textContent = selectedAvatar;
-                headerUsername.textContent = username;
+                headerUsername.textContent = username.toUpperCase();
                 if (isAdmin) {
-                    headerUsername.innerHTML = `${username} <span class="admin-badge">ADMIN</span>`;
+                    headerUsername.innerHTML = `${username.toUpperCase()} <span class="admin-badge">ROOT</span>`;
                 }
                 userInfoHeader.style.display = "flex";
             } else {
@@ -943,9 +1410,9 @@
         const logoutBtn = document.createElement("button");
         logoutBtn.className = "theme-toggle";
         logoutBtn.textContent = "🚪";
-        logoutBtn.title = "Çıkış Yap";
+        logoutBtn.title = "DISCONNECT";
         logoutBtn.onclick = () => {
-            if (confirm("Çıkış yapmak istediğinizden emin misiniz?")) {
+            if (confirm("TERMINATE CONNECTION?")) {
                 socket.emit("logout");
                 localStorage.clear();
                 window.location.reload();
@@ -960,7 +1427,7 @@
             audio.play().catch(() => {});
         }
 
-        // Socket olayları
+        // Socket olayları (aynı kalacak, sadece bazı mesajlar değişecek)
         socket.on("userColor", (color) => {
             userColor = color;
         });
@@ -994,7 +1461,7 @@
                 if (!msgEl.querySelector(".message-edited")) {
                     const editedTag = document.createElement("div");
                     editedTag.className = "message-edited";
-                    editedTag.textContent = "(düzenlendi)";
+                    editedTag.textContent = "[MODIFIED]";
                     msgEl.appendChild(editedTag);
                 }
             }
@@ -1007,7 +1474,7 @@
 
         socket.on("userTyping", (data) => {
             if (data.typing) {
-                typingIndicator.textContent = `${data.username} yazıyor...`;
+                typingIndicator.textContent = `${data.username.toUpperCase()} IS TYPING...`;
             } else {
                 typingIndicator.textContent = "";
             }
@@ -1019,14 +1486,14 @@
                 const div = document.createElement("div");
                 div.className = "room-item" + (room.id === currentRoom ? " active" : "");
                 div.innerHTML = `
-                    <span>${room.name}</span>
+                    <span>${room.name.toUpperCase()}</span>
                     <span class="room-badge">${room.userCount}</span>
                 `;
                 div.onclick = () => {
                     socket.emit("joinRoom", room.id);
                     currentRoom = room.id;
-                    messagesDiv.innerHTML = '<div class="system-message">Odaya hoş geldiniz! 👋</div>';
-                    roomTitle.textContent = `💬 ${room.name}`;
+                    messagesDiv.innerHTML = '<div class="system-message">SYSTEM: CHANNEL CONNECTED ⚡</div>';
+                    roomTitle.textContent = `💬 ${room.name.toUpperCase()}.CHAN`;
                 };
                 roomList.appendChild(div);
             });
@@ -1046,13 +1513,13 @@
                     <div class="user-info-left">
                         <span class="user-avatar">${user.avatar}</span>
                         <span class="user-name" style="color: ${user.color}">
-                            ${user.username}
-                            ${user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                            ${user.username.toUpperCase()}
+                            ${user.isAdmin ? '<span class="admin-badge">ROOT</span>' : ''}
                         </span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px;">
                         ${user.unreadCount > 0 ? `<span class="unread-badge">${user.unreadCount}</span>` : ''}
-                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">🎤</button>
+                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="VOICE LINK">🎤</button>
                     </div>
                 `;
                 div.onclick = () => openDM(user.id, user.username);
@@ -1060,9 +1527,9 @@
             });
         });
 
-        function openDM(userId, username) {
+                function openDM(userId, username) {
             currentDMTarget = userId;
-            document.getElementById("dmTitle").textContent = `💬 ${username}`;
+            document.getElementById("dmTitle").textContent = `💬 ${username.toUpperCase()}.PRIVATE`;
             document.getElementById("dmModal").classList.add("show");
             document.getElementById("dmMessages").innerHTML = "";
             document.getElementById("dmInput").focus();
@@ -1095,7 +1562,7 @@
         });
 
         socket.on("newPrivateMessage", (data) => {
-            showNotification(`${data.avatar} ${data.from}: ${data.preview}`);
+            showNotification(`PRIVATE CHANNEL: ${data.avatar} ${data.from.toUpperCase()}: ${data.preview}`);
             playNotificationSound();
         });
 
@@ -1108,18 +1575,19 @@
             msgDiv.style.marginLeft = isMe ? "auto" : "0";
             msgDiv.style.marginRight = isMe ? "0" : "auto";
             msgDiv.style.maxWidth = "70%";
-            msgDiv.style.background = isMe ? "#667eea" : "white";
-            msgDiv.style.color = isMe ? "white" : "#333";
+            msgDiv.style.background = isMe ? "linear-gradient(135deg, #ff006e, #8338ec)" : "rgba(0, 0, 0, 0.8)";
+            msgDiv.style.color = isMe ? "white" : "#00ff9f";
+            msgDiv.style.border = isMe ? "2px solid #ff006e" : "2px solid #00ff9f";
             
             msgDiv.innerHTML = `
                 <div class="message-header">
                     <div class="message-user">
                         <span style="font-size: 16px">${data.avatar}</span>
-                        <span style="color: ${isMe ? 'white' : data.color}">${data.username}</span>
+                        <span style="color: ${isMe ? 'white' : data.color}">${data.username.toUpperCase()}</span>
                     </div>
-                    <span class="time" style="color: ${isMe ? 'rgba(255,255,255,0.8)' : '#999'}">${data.time}</span>
+                    <span class="time" style="color: ${isMe ? 'rgba(255,255,255,0.8)' : 'rgba(0,255,159,0.8)'}">[${data.time}]</span>
                 </div>
-                <div class="message-text" style="color: ${isMe ? 'white' : '#333'}">${escapeHtml(data.message)}</div>
+                <div class="message-text" style="color: ${isMe ? 'white' : '#00ff9f'}">${escapeHtml(data.message)}</div>
             `;
             dmMessages.appendChild(msgDiv);
             dmMessages.scrollTop = dmMessages.scrollHeight;
@@ -1156,42 +1624,42 @@
         socket.on("adminStatus", (status) => {
             isAdmin = status;
             if (isAdmin) {
-                showNotification("🛡️ Admin yetkileriniz aktif!");
+                showNotification("SYSTEM: ROOT ACCESS GRANTED ⚡");
                 // Header'da admin badge'i göster
                 updateHeaderUserInfo();
             }
         });
 
         socket.on("kicked", (reason) => {
-            alert("⚠️ " + reason);
+            alert("⚠️ SYSTEM ERROR: " + reason);
             window.location.reload();
         });
 
         socket.on("banned", (reason) => {
-            alert("🚫 " + reason);
+            alert("🚫 ACCESS DENIED: " + reason);
             window.location.href = "about:blank";
         });
 
         socket.on("muted", (reason) => {
-            showNotification("🔇 " + reason);
+            showNotification("🔇 VOICE DISABLED: " + reason);
         });
 
         socket.on("unmuted", (reason) => {
-            showNotification("🔊 " + reason);
+            showNotification("🔊 VOICE ENABLED: " + reason);
         });
 
         socket.on("warning", (reason) => {
-            alert("⚠️ UYARI: " + reason);
+            alert("⚠️ SYSTEM WARNING: " + reason);
         });
 
         socket.on("roomDeleted", (message) => {
-            showNotification(message);
+            showNotification("CHANNEL TERMINATED: " + message);
             currentRoom = "genel";
-            roomTitle.textContent = "💬 Genel";
+            roomTitle.textContent = "💬 GENERAL.CHAN";
         });
 
         socket.on("chatHistoryCleared", () => {
-            messagesDiv.innerHTML = '<div class="system-message">Sohbet geçmişi admin tarafından temizlendi</div>';
+            messagesDiv.innerHTML = '<div class="system-message">SYSTEM: CHAT LOGS PURGED BY ADMIN</div>';
         });
 
         // Mesaj gönder
@@ -1201,7 +1669,7 @@
                 if (editingMessageId) {
                     socket.emit("editMessage", { messageId: editingMessageId, newMessage: msg });
                     editingMessageId = null;
-                    sendBtn.textContent = "Gönder";
+                    sendBtn.textContent = "TRANSMIT";
                 } else {
                     socket.emit("chatMessage", msg);
                 }
@@ -1241,17 +1709,17 @@
                     <div class="message-user">
                         <span style="font-size: 20px">${data.avatar}</span>
                         <span style="color: ${data.color}">
-                            ${data.username}
-                            ${data.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                            ${data.username.toUpperCase()}
+                            ${data.isAdmin ? '<span class="admin-badge">ROOT</span>' : ''}
                         </span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="time">${data.time}</span>
+                        <span class="time">[${data.time}]</span>
                         ${actions}
                     </div>
                 </div>
                 <div class="message-text">${escapeHtml(data.message)}</div>
-                ${data.edited ? '<div class="message-edited">(düzenlendi)</div>' : ''}
+                ${data.edited ? '<div class="message-edited">[MODIFIED]</div>' : ''}
             `;
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -1262,12 +1730,12 @@
         function editMessage(id, message) {
             editingMessageId = id;
             messageInput.value = message;
-            sendBtn.textContent = "Güncelle";
+            sendBtn.textContent = "UPDATE";
             messageInput.focus();
         }
 
         function deleteMessage(id) {
-            if (confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+            if (confirm("DELETE THIS DATA PACKET?")) {
                 socket.emit("deleteMessage", id);
             }
         }
@@ -1275,7 +1743,7 @@
         function addSystemMessage(msg) {
             const msgDiv = document.createElement("div");
             msgDiv.className = "system-message";
-            msgDiv.textContent = msg;
+            msgDiv.textContent = "SYSTEM: " + msg.toUpperCase();
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
@@ -1336,11 +1804,11 @@
                 });
                 
                 // Arama modalını göster
-                showCallModal(username, avatar, "Aranıyor...", false);
+                showCallModal(username, avatar, "ESTABLISHING LINK...", false);
                 
             } catch (error) {
-                console.error("Sesli arama başlatılamadı:", error);
-                showNotification("Mikrofon erişimi reddedildi veya hata oluştu!");
+                console.error("Voice link failed:", error);
+                showNotification("AUDIO INTERFACE ACCESS DENIED!");
             }
         }
         
@@ -1349,7 +1817,7 @@
             const { from, fromUsername, fromAvatar, offer } = data;
             currentCallTarget = from;
             
-            showCallModal(fromUsername, fromAvatar, "Sizi arıyor...", true);
+            showCallModal(fromUsername, fromAvatar, "INCOMING TRANSMISSION...", true);
             
             // Accept butonu
             document.getElementById("acceptCallBtn").onclick = async () => {
@@ -1400,8 +1868,8 @@
                     showVoiceIndicator(fromUsername);
                     
                 } catch (error) {
-                    console.error("Arama kabul edilemedi:", error);
-                    showNotification("Mikrofon erişimi reddedildi!");
+                    console.error("Call accept failed:", error);
+                    showNotification("AUDIO INTERFACE ACCESS DENIED!");
                     endVoiceCall();
                 }
             };
@@ -1430,12 +1898,12 @@
         // Arama sonlandı
         socket.on("voice-call-ended", () => {
             endVoiceCall();
-            showNotification("Görüşme sonlandırıldı");
+            showNotification("VOICE LINK TERMINATED");
         });
         
         function showCallModal(name, avatar, status, showAccept) {
             document.getElementById("voiceCallAvatar").textContent = avatar;
-            document.getElementById("voiceCallName").textContent = name;
+            document.getElementById("voiceCallName").textContent = name.toUpperCase();
             document.getElementById("voiceCallStatus").textContent = status;
             document.getElementById("acceptCallBtn").style.display = showAccept ? "block" : "none";
             document.getElementById("voiceCallModal").classList.add("show");
@@ -1446,7 +1914,7 @@
         }
         
         function showVoiceIndicator(name) {
-            document.getElementById("voiceIndicatorText").textContent = `${name} ile görüşme`;
+            document.getElementById("voiceIndicatorText").textContent = `VOICE LINK: ${name.toUpperCase()}`;
             document.getElementById("voiceIndicator").classList.add("show");
         }
         
