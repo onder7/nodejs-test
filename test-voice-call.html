@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sesli Arama Test</title>
+</head>
+<body>
+    <h1>Sesli Arama Test Sayfası</h1>
+    
+    <h2>Test Adımları:</h2>
+    <ol>
+        <li>İki farklı tarayıcı veya sekme açın</li>
+        <li>Her ikisinde de http://localhost:3000 adresine gidin</li>
+        <li>Farklı kullanıcı adları ile giriş yapın</li>
+        <li>Bir kullanıcıda, diğer kullanıcının yanındaki 📞 butonuna tıklayın</li>
+        <li>Mikrofon izni verin</li>
+        <li>Diğer tarayıcıda arama gelecek</li>
+        <li>Kabul et butonuna tıklayın</li>
+        <li>Mikrofon izni verin</li>
+        <li>Görüşme başlamalı</li>
+    </ol>
+    
+    <h2>Kontrol Listesi:</h2>
+    <ul>
+        <li>✅ WebRTC değişkenleri tanımlı (localStream, peerConnection, currentCallTarget)</li>
+        <li>✅ startVoiceCall fonksiyonu var</li>
+        <li>✅ Socket.IO event handler'ları var (voice-offer, voice-answer, ice-candidate)</li>
+        <li>✅ Modal HTML yapısı düzeltildi</li>
+        <li>✅ CSS stilleri mevcut</li>
+        <li>✅ Butonlar doğru event'lere bağlı</li>
+    </ul>
+    
+    <h2>Olası Sorunlar:</h2>
+    <ul>
+        <li><strong>Mikrofon İzni:</strong> Tarayıcı mikrofon iznini engelliyor olabilir</li>
+        <li><strong>HTTPS:</strong> Bazı tarayıcılar HTTP'de WebRTC'yi engelleyebilir (localhost hariç)</li>
+        <li><strong>Firewall:</strong> WebRTC bağlantısı firewall tarafından engellenmiş olabilir</li>
+        <li><strong>STUN Sunucuları:</strong> Google STUN sunucularına erişim olmalı</li>
+    </ul>
+    
+    <h2>Console'da Test:</h2>
+    <pre>
+// Tarayıcı console'unda çalıştırın:
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+        console.log("✅ Mikrofon erişimi başarılı!");
+        stream.getTracks().forEach(track => track.stop());
+    })
+    .catch(err => {
+        console.error("❌ Mikrofon erişimi başarısız:", err);
+    });
+    </pre>
+    
+    <p><a href="/">← Ana Sayfaya Dön</a></p>
+</body>
+</html>
