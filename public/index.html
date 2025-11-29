@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Node.js & Socket.IO Test</title>
+</head>
+<body>
+<h1>Socket.IO Test Sayfası</h1>
+<p id="status">Bağlanıyor...</p>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+
+    socket.on("hello", function(msg) {
+        document.getElementById("status").innerHTML = "Sunucu mesajı: " + msg;
+    });
+</script>
+</body>
+</html>
