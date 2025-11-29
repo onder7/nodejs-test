@@ -147,12 +147,84 @@
         let peerConnection = null;
         let currentCallTarget = null;
         let isMuted = false;
+        let ringtoneAudio = null;
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' }
             ]
         };
+        
+        // Zil sesi oluştur (Web Audio API ile)
+        function createRingtone() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800; // Hz
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+            
+            return { audioContext, oscillator, gainNode };
+        }
+        
+        // Zil sesini çal
+        function playRingtone() {
+            try {
+                if (ringtoneAudio) {
+                    stopRingtone();
+                }
+                
+                const { audioContext, oscillator, gainNode } = createRingtone();
+                ringtoneAudio = { audioContext, oscillator, gainNode, isPlaying: true };
+                
+                // Zil sesi pattern: 1 saniye çal, 0.5 saniye dur
+                let isRinging = true;
+                oscillator.start();
+                
+                const ringPattern = setInterval(() => {
+                    if (!ringtoneAudio || !ringtoneAudio.isPlaying) {
+                        clearInterval(ringPattern);
+                        return;
+                    }
+                    
+                    if (isRinging) {
+                        gainNode.gain.value = 0;
+                    } else {
+                        gainNode.gain.value = 0.3;
+                    }
+                    isRinging = !isRinging;
+                }, 500);
+                
+                ringtoneAudio.ringPattern = ringPattern;
+            } catch (error) {
+                console.error("Zil sesi çalınamadı:", error);
+            }
+        }
+        
+        // Zil sesini durdur
+        function stopRingtone() {
+            if (ringtoneAudio) {
+                try {
+                    if (ringtoneAudio.ringPattern) {
+                        clearInterval(ringtoneAudio.ringPattern);
+                    }
+                    if (ringtoneAudio.oscillator) {
+                        ringtoneAudio.oscillator.stop();
+                    }
+                    if (ringtoneAudio.audioContext) {
+                        ringtoneAudio.audioContext.close();
+                    }
+                    ringtoneAudio.isPlaying = false;
+                } catch (error) {
+                    console.error("Zil sesi durdurulamadı:", error);
+                }
+                ringtoneAudio = null;
+            }
+        }
         
         // Avatar seçenekleri
         const avatars = ["👤", "😊", "😎", "🤓", "🥳", "🤠", "👨‍💻", "👩‍💻", "🧑‍🎨", "🦸", "🧙", "🐱", "🐶", "🦊", "🐼", "🦁"];
@@ -680,12 +752,14 @@
                     offer: offer
                 });
                 
-                // Arama modalını göster
+                // Arama modalını göster ve zil sesini çal
                 showCallModal(username, avatar, "Aranıyor...", false);
+                playRingtone();
                 
             } catch (error) {
                 console.error("Sesli arama başlatılamadı:", error);
                 showNotification("Mikrofon erişimi reddedildi veya hata oluştu!");
+                stopRingtone();
             }
         }
         
@@ -694,6 +768,8 @@
             const { from, fromUsername, fromAvatar, offer } = data;
             currentCallTarget = from;
             
+            // Zil sesini çal ve modalı göster
+            playRingtone();
             showCallModal(fromUsername, fromAvatar, "Sizi arıyor...", true);
             
             // Accept butonu
@@ -740,13 +816,15 @@
                         answer: answer
                     });
                     
-                    // Görüşme başladı
+                    // Görüşme başladı - zil sesini durdur
+                    stopRingtone();
                     hideCallModal();
                     showVoiceIndicator(fromUsername);
                     
                 } catch (error) {
                     console.error("Arama kabul edilemedi:", error);
                     showNotification("Mikrofon erişimi reddedildi!");
+                    stopRingtone();
                     endVoiceCall();
                 }
             };
@@ -758,6 +836,7 @@
             
             if (peerConnection) {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                stopRingtone(); // Zil sesini durdur
                 hideCallModal();
                 showVoiceIndicator(document.getElementById("voiceCallName").textContent);
             }
@@ -800,6 +879,9 @@
         }
         
         function endVoiceCall() {
+            // Zil sesini durdur
+            stopRingtone();
+            
             // Stream'leri kapat
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
