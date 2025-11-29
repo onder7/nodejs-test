@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .user-list, .message-list, .room-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .user-item, .message-item, .room-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            font-size: 24px;
+        }
+        .user-name {
+            font-weight: 600;
+        }
+        .admin-badge {
+            background: #ffc107;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .btn-kick {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-ban {
+            background: #f44336;
+            color: white;
+        }
+        .btn-mute {
+            background: #9c27b0;
+            color: white;
+        }
+        .btn-warn {
+            background: #ffc107;
+            color: white;
+        }
+        .btn-unmute {
+            background: #4caf50;
+            color: white;
+        }
+        .message-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .time {
+            font-size: 12px;
+            color: #999;
+        }
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .login-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .login-content input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .login-content button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <h2>🔐 Admin Girişi</h2>
+            <p style="margin-bottom: 20px; color: #666;">Admin kullanıcı adınızı girin</p>
+            <input type="text" id="adminUsername" placeholder="Kullanıcı adı (admin veya onder7)">
+            <button onclick="adminLogin()">Giriş Yap</button>
+        </div>
+    </div>
+
+    <div class="admin-container" id="adminPanel" style="display: none;">
+        <div class="header">
+            <h1>🛡️ Admin Kontrol Paneli</h1>
+            <p style="color: #666;">Hoş geldin, <span id="adminName"></span>!</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Toplam Kullanıcı</h3>
+                <div class="value" id="totalUsers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Toplam Mesaj</h3>
+                <div class="value" id="totalMessages">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Yasaklı Kullanıcı</h3>
+                <div class="value" id="bannedCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Susturulmuş</h3>
+                <div class="value" id="mutedCount">0</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="panel">
+                <h2>👥 Online Kullanıcılar</h2>
+                <div class="user-list" id="userList"></div>
+            </div>
+
+            <div class="panel">
+                <h2>📁 Odalar</h2>
+                <div class="room-list" id="roomList"></div>
+            </div>
+
+            <div class="panel" style="grid-column: 1 / -1;">
+                <h2>💬 Son Mesajlar</h2>
+                <div class="message-list" id="messageList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let adminUsername = "";
+        let isAdmin = false;
+
+        function adminLogin() {
+            const username = document.getElementById("adminUsername").value.trim();
+            if (!username) {
+                showAlert("Lütfen kullanıcı adı girin!", "error");
+                return;
+            }
+
+            adminUsername = username;
+            socket.emit("setUsername", { username, avatar: "👑" });
+        }
+
+        socket.on("adminStatus", (status) => {
+            isAdmin = status;
+            if (isAdmin) {
+                document.getElementById("loginModal").style.display = "none";
+                document.getElementById("adminPanel").style.display = "block";
+                document.getElementById("adminName").textContent = adminUsername;
+                loadAdminData();
+                setInterval(loadAdminData, 5000);
+            } else {
+                showAlert("Admin yetkisi yok!", "error");
+            }
+        });
+
+        socket.on("banned", (msg) => {
+            showAlert(msg, "error");
+        });
+
+        function loadAdminData() {
+            socket.emit("getAdminStats");
+            socket.emit("getOnlineUsers");
+        }
+
+        socket.on("adminStats", (stats) => {
+            document.getElementById("totalUsers").textContent = stats.totalUsers;
+            document.getElementById("totalMessages").textContent = stats.totalMessages;
+            document.getElementById("bannedCount").textContent = stats.bannedCount;
+            document.getElementById("mutedCount").textContent = stats.mutedCount;
+
+            // Odaları göster
+            const roomList = document.getElementById("roomList");
+            roomList.innerHTML = "";
+            stats.roomStats.forEach(room => {
+                const div = document.createElement("div");
+                div.className = "room-item";
+                div.innerHTML = `
+                    <div>
+                        <strong>${room.name}</strong>
+                        <div style="font-size: 12px; color: #666;">${room.userCount} kullanıcı</div>
+                    </div>
+                `;
+                roomList.appendChild(div);
+            });
+
+            // Son mesajları göster
+            const messageList = document.getElementById("messageList");
+            messageList.innerHTML = "";
+            stats.recentMessages.reverse().forEach(msg => {
+                const div = document.createElement("div");
+                div.className = "message-item";
+                div.innerHTML = `
+                    <div>
+                        <div class="user-info">
+                            <span class="user-avatar">${msg.avatar}</span>
+                            <span class="user-name" style="color: ${msg.color}">${msg.username}</span>
+                            ${msg.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                            <span class="time">${msg.time}</span>
+                        </div>
+                        <div class="message-text">${escapeHtml(msg.message)}</div>
+                    </div>
+                `;
+                messageList.appendChild(div);
+            });
+        });
+
+        socket.on("onlineUsers", (users) => {
+            const userList = document.getElementById("userList");
+            userList.innerHTML = "";
+            users.forEach(user => {
+                if (user.username === adminUsername) return; // Kendini gösterme
+                
+                const div = document.createElement("div");
+                div.className = "user-item";
+                div.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-avatar">${user.avatar}</span>
+                        <span class="user-name" style="color: ${user.color}">${user.username}</span>
+                        ${user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-warn" onclick="warnUser('${user.id}', '${user.username}')">⚠️</button>
+                        <button class="btn btn-mute" onclick="muteUser('${user.id}', '${user.username}')">🔇</button>
+                        <button class="btn btn-kick" onclick="kickUser('${user.id}', '${user.username}')">👢</button>
+                        <button class="btn btn-ban" onclick="banUser('${user.id}', '${user.username}')">🚫</button>
+                    </div>
+                `;
+                userList.appendChild(div);
+            });
+        });
+
+        function warnUser(userId, username) {
+            const reason = prompt(`${username} kullanıcısına uyarı nedeni:`);
+            if (reason) {
+                socket.emit("adminAction", { action: "warn", targetId: userId, reason });
+            }
+        }
+
+        function muteUser(userId, username) {
+            const duration = prompt(`${username} kullanıcısını kaç saniye susturmak istiyorsunuz?`, "300");
+            if (duration) {
+                socket.emit("adminAction", { action: "mute", targetId: userId, duration: parseInt(duration) * 1000 });
+            }
+        }
+
+        function kickUser(userId, username) {
+            if (confirm(`${username} kullanıcısını atmak istediğinizden emin misiniz?`)) {
+                const reason = prompt("Atma nedeni:");
+                socket.emit("adminAction", { action: "kick", targetId: userId, reason });
+            }
+        }
+
+        function banUser(userId, username) {
+            if (confirm(`${username} kullanıcısını KALICI olarak yasaklamak istediğinizden emin misiniz?`)) {
+                const reason = prompt("Yasaklama nedeni:");
+                socket.emit("adminAction", { action: "ban", targetId: userId, reason });
+            }
+        }
+
+        socket.on("adminActionSuccess", (msg) => {
+            showAlert(msg, "success");
+        });
+
+        socket.on("error", (msg) => {
+            showAlert(msg, "error");
+        });
+
+        function showAlert(message, type) {
+            const container = document.getElementById("alertContainer");
+            const alert = document.createElement("div");
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

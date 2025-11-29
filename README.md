@@ -13,7 +13,11 @@ Modern ve özellik dolu bir Node.js + Express + Socket.IO chat uygulaması.
 
 ### 🎯 Gelişmiş Özellikler
 - **Oda/Kanal sistemi** - Genel, Teknoloji ve Oyun odaları
-- **Özel mesaj (DM)** - Kullanıcılara tıklayarak özel mesaj gönderin
+- **Gelişmiş Özel Mesaj (DM)** - Tam özellikli özel mesajlaşma sistemi
+  - Özel mesaj penceresi
+  - Mesaj geçmişi
+  - Okunmamış mesaj sayacı
+  - Anlık bildirimler
 - **Mesaj düzenleme** - Gönderdiğiniz mesajları düzenleyin
 - **Mesaj silme** - İstemediğiniz mesajları silin
 - **Dosya paylaşımı** - Resim dosyalarını paylaşın
@@ -24,6 +28,23 @@ Modern ve özellik dolu bir Node.js + Express + Socket.IO chat uygulaması.
 - **Ses bildirimi** - Yeni mesajlarda ses uyarısı
 - **Responsive tasarım** - Mobil ve masaüstü uyumlu
 - **Sidebar** - Odalar ve online kullanıcılar yan panelde
+
+### 🛡️ Admin Özellikleri
+- **Admin Panel** - Ayrı admin kontrol sayfası (/admin.html)
+- **Kullanıcı Yönetimi**
+  - Kullanıcıları atma (kick)
+  - Kullanıcıları yasaklama (ban)
+  - Kullanıcıları susturma (mute)
+  - Kullanıcılara uyarı gönderme
+- **İstatistikler**
+  - Toplam kullanıcı sayısı
+  - Toplam mesaj sayısı
+  - Yasaklı kullanıcı sayısı
+  - Susturulmuş kullanıcı sayısı
+- **Gerçek Zamanlı İzleme**
+  - Online kullanıcılar
+  - Son mesajlar
+  - Oda istatistikleri
 
 ## 🚀 Hızlı Başlangıç
 
@@ -56,9 +77,21 @@ http://localhost:3000
 ### Gelişmiş İşlemler
 - **Oda değiştirmek**: Sol panelden istediğiniz odaya tıklayın
 - **Özel mesaj göndermek**: Online kullanıcılar listesinden bir kullanıcıya tıklayın
+  - Özel mesaj penceresi açılır
+  - Mesaj geçmişinizi görüntüleyin
+  - Okunmamış mesajlar kırmızı rozet ile gösterilir
 - **Mesaj düzenlemek**: Kendi mesajınızın üzerine gelip ✏️ butonuna tıklayın
 - **Mesaj silmek**: Kendi mesajınızın üzerine gelip 🗑️ butonuna tıklayın
 - **Avatar seçmek**: İlk girişte 16 farklı avatar arasından seçim yapın
+
+### Admin İşlemleri
+1. **Admin Paneline Giriş**: `/admin.html` adresine gidin
+2. **Admin Kullanıcı Adları**: `admin` veya `onder7`
+3. **Kullanıcı Yönetimi**:
+   - ⚠️ Uyarı: Kullanıcıya özel uyarı mesajı gönderin
+   - 🔇 Sustur: Kullanıcıyı belirli süre susturun
+   - 👢 At: Kullanıcıyı odadan atın
+   - 🚫 Yasakla: Kullanıcıyı kalıcı yasaklayın
 
 ## 🛠️ Teknolojiler
 
@@ -92,8 +125,18 @@ http://localhost:3000
 
 ### Özel Mesajlar
 - Online kullanıcılar listesinden kullanıcıya tıklayın
-- Özel mesajlar sarı arka plan ile vurgulanır
+- Özel mesaj penceresi açılır
+- Mesaj geçmişi saklanır ve tekrar görüntülenebilir
+- Okunmamış mesajlar kırmızı rozet ile gösterilir
+- Yeni özel mesaj geldiğinde bildirim alırsınız
 - Sadece gönderen ve alıcı görebilir
+
+### Admin Sistemi
+- Admin kullanıcıları özel yetkilerle işaretlenir
+- Admin paneli ayrı bir sayfada çalışır
+- Tüm kullanıcı aktiviteleri izlenebilir
+- Gerçek zamanlı istatistikler
+- Kullanıcı yönetim araçları
 
 ---
 
