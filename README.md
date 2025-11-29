@@ -18,6 +18,11 @@ Modern ve özellik dolu bir Node.js + Express + Socket.IO chat uygulaması.
   - Mesaj geçmişi
   - Okunmamış mesaj sayacı
   - Anlık bildirimler
+- **🎤 Sesli Sohbet (WebRTC)** - Gerçek zamanlı sesli görüşme
+  - Kullanıcıdan kullanıcıya sesli arama
+  - Mikrofon açma/kapama
+  - Görüşme göstergesi
+  - Arama kabul/reddetme
 - **Mesaj düzenleme** - Gönderdiğiniz mesajları düzenleyin
 - **Mesaj silme** - İstemediğiniz mesajları silin
 - **Dosya paylaşımı** - Resim dosyalarını paylaşın
@@ -103,6 +108,11 @@ http://localhost:3000
   - Özel mesaj penceresi açılır
   - Mesaj geçmişinizi görüntüleyin
   - Okunmamış mesajlar kırmızı rozet ile gösterilir
+- **Sesli arama yapmak**: Kullanıcı listesinde 🎤 butonuna tıklayın
+  - Mikrofon izni verin
+  - Karşı taraf aramayı kabul ederse görüşme başlar
+  - 🔇 butonu ile mikrofonu kapatabilirsiniz
+  - 📵 butonu ile görüşmeyi sonlandırın
 - **Mesaj düzenlemek**: Kendi mesajınızın üzerine gelip ✏️ butonuna tıklayın
 - **Mesaj silmek**: Kendi mesajınızın üzerine gelip 🗑️ butonuna tıklayın
 - **Avatar seçmek**: İlk girişte 16 farklı avatar arasından seçim yapın
@@ -144,6 +154,9 @@ http://localhost:3000
 - Loglar `logs/` klasöründe günlük olarak saklanır
 - Session bilgileri sunucu belleğinde tutulur
 - Her aktivite otomatik olarak loglanır
+- **Sesli sohbet için mikrofon izni gereklidir**
+- Sesli sohbet WebRTC teknolojisi ile peer-to-peer çalışır
+- STUN sunucuları Google'ın ücretsiz sunucularını kullanır
 
 ## 🎨 Özellik Detayları
 

@@ -702,6 +702,52 @@ io.on("connection", (socket) => {
     socket.emit("allUsers", allUsers);
   });
   
+  // WebRTC Sinyal İşlemleri
+  socket.on("voice-offer", (data) => {
+    const { targetId, offer } = data;
+    const user = users.get(socket.id);
+    if (!user) return;
+    
+    const targetUser = Array.from(users.entries()).find(([id]) => id.substring(0, 6) === targetId);
+    if (targetUser) {
+      io.to(targetUser[0]).emit("voice-offer", {
+        from: socket.id.substring(0, 6),
+        fromUsername: user.username,
+        fromAvatar: user.avatar,
+        offer
+      });
+    }
+  });
+  
+  socket.on("voice-answer", (data) => {
+    const { targetId, answer } = data;
+    const targetUser = Array.from(users.entries()).find(([id]) => id.substring(0, 6) === targetId);
+    if (targetUser) {
+      io.to(targetUser[0]).emit("voice-answer", {
+        from: socket.id.substring(0, 6),
+        answer
+      });
+    }
+  });
+  
+  socket.on("ice-candidate", (data) => {
+    const { targetId, candidate } = data;
+    const targetUser = Array.from(users.entries()).find(([id]) => id.substring(0, 6) === targetId);
+    if (targetUser) {
+      io.to(targetUser[0]).emit("ice-candidate", {
+        from: socket.id.substring(0, 6),
+        candidate
+      });
+    }
+  });
+  
+  socket.on("end-voice-call", (targetId) => {
+    const targetUser = Array.from(users.entries()).find(([id]) => id.substring(0, 6) === targetId);
+    if (targetUser) {
+      io.to(targetUser[0]).emit("voice-call-ended", socket.id.substring(0, 6));
+    }
+  });
+  
   // Kullanıcı yazıyor bildirimi
   socket.on("typing", (isTyping) => {
     const user = users.get(socket.id) || { username: "Misafir" };

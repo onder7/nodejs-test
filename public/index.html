@@ -225,6 +225,110 @@
             background: #0f3460;
             color: white;
         }
+        .voice-call-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 3000;
+            display: none;
+            text-align: center;
+            min-width: 300px;
+        }
+        body.dark-mode .voice-call-modal {
+            background: #0f3460;
+            color: white;
+        }
+        .voice-call-modal.show {
+            display: block;
+        }
+        .voice-call-avatar {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        .voice-call-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .voice-call-status {
+            color: #999;
+            margin-bottom: 20px;
+        }
+        .voice-call-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .voice-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .voice-btn:hover {
+            transform: scale(1.1);
+        }
+        .voice-btn-accept {
+            background: #4caf50;
+            color: white;
+        }
+        .voice-btn-reject {
+            background: #f44336;
+            color: white;
+        }
+        .voice-btn-end {
+            background: #f44336;
+            color: white;
+        }
+        .voice-btn-mute {
+            background: #ff9800;
+            color: white;
+        }
+        .voice-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 2500;
+            animation: pulse 2s infinite;
+        }
+        .voice-indicator.show {
+            display: flex;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5); }
+            50% { box-shadow: 0 5px 30px rgba(76, 175, 80, 0.8); }
+        }
+        .voice-icon-btn {
+            background: #4caf50;
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.3s;
+            margin-left: 5px;
+        }
+        .voice-icon-btn:hover {
+            transform: scale(1.1);
+        }
         .container {
             flex: 1;
             background: white;
@@ -595,6 +699,23 @@
 
     <div class="notification" id="notification"></div>
 
+    <div class="voice-call-modal" id="voiceCallModal">
+        <div class="voice-call-avatar" id="voiceCallAvatar">👤</div>
+        <div class="voice-call-name" id="voiceCallName">Kullanıcı</div>
+        <div class="voice-call-status" id="voiceCallStatus">Aranıyor...</div>
+        <div class="voice-call-buttons" id="voiceCallButtons">
+            <button class="voice-btn voice-btn-accept" id="acceptCallBtn" style="display: none;">📞</button>
+            <button class="voice-btn voice-btn-reject" id="rejectCallBtn">❌</button>
+        </div>
+    </div>
+
+    <div class="voice-indicator" id="voiceIndicator">
+        <span>🎤</span>
+        <span id="voiceIndicatorText">Sesli görüşme aktif</span>
+        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">🔇</button>
+        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">📵</button>
+    </div>
+
     <div class="dm-modal" id="dmModal">
         <div class="dm-content">
             <div class="dm-header">
@@ -682,6 +803,18 @@
         let editingMessageId = null;
         let currentDMTarget = null;
         let isAdmin = false;
+        
+        // WebRTC değişkenleri
+        let localStream = null;
+        let peerConnection = null;
+        let currentCallTarget = null;
+        let isMuted = false;
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
         
         // Avatar seçenekleri
         const avatars = ["👤", "😊", "😎", "🤓", "🥳", "🤠", "👨‍💻", "👩‍💻", "🧑‍🎨", "🦸", "🧙", "🐱", "🐶", "🦊", "🐼", "🦁"];
@@ -917,7 +1050,10 @@
                             ${user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                         </span>
                     </div>
-                    ${user.unreadCount > 0 ? `<span class="unread-badge">${user.unreadCount}</span>` : ''}
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        ${user.unreadCount > 0 ? `<span class="unread-badge">${user.unreadCount}</span>` : ''}
+                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">🎤</button>
+                    </div>
                 `;
                 div.onclick = () => openDM(user.id, user.username);
                 userList.appendChild(div);
@@ -1154,6 +1290,211 @@
         setInterval(() => {
             socket.emit("getOnlineUsers");
         }, 5000);
+
+        // ===== SESLI SOHBET (WebRTC) =====
+        
+        async function startVoiceCall(userId, username, avatar) {
+            try {
+                currentCallTarget = userId;
+                
+                // Mikrofon izni al
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                // Peer connection oluştur
+                peerConnection = new RTCPeerConnection(configuration);
+                
+                // Local stream'i ekle
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+                
+                // ICE candidate olayı
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit("ice-candidate", {
+                            targetId: userId,
+                            candidate: event.candidate
+                        });
+                    }
+                };
+                
+                // Remote stream geldiğinde
+                peerConnection.ontrack = (event) => {
+                    const remoteAudio = new Audio();
+                    remoteAudio.srcObject = event.streams[0];
+                    remoteAudio.play();
+                };
+                
+                // Offer oluştur
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Offer'ı gönder
+                socket.emit("voice-offer", {
+                    targetId: userId,
+                    offer: offer
+                });
+                
+                // Arama modalını göster
+                showCallModal(username, avatar, "Aranıyor...", false);
+                
+            } catch (error) {
+                console.error("Sesli arama başlatılamadı:", error);
+                showNotification("Mikrofon erişimi reddedildi veya hata oluştu!");
+            }
+        }
+        
+        // Gelen arama
+        socket.on("voice-offer", async (data) => {
+            const { from, fromUsername, fromAvatar, offer } = data;
+            currentCallTarget = from;
+            
+            showCallModal(fromUsername, fromAvatar, "Sizi arıyor...", true);
+            
+            // Accept butonu
+            document.getElementById("acceptCallBtn").onclick = async () => {
+                try {
+                    // Mikrofon izni al
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    
+                    // Peer connection oluştur
+                    peerConnection = new RTCPeerConnection(configuration);
+                    
+                    // Local stream'i ekle
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                    
+                    // ICE candidate olayı
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            socket.emit("ice-candidate", {
+                                targetId: from,
+                                candidate: event.candidate
+                            });
+                        }
+                    };
+                    
+                    // Remote stream geldiğinde
+                    peerConnection.ontrack = (event) => {
+                        const remoteAudio = new Audio();
+                        remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.play();
+                    };
+                    
+                    // Remote description ayarla
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    
+                    // Answer oluştur
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    
+                    // Answer'ı gönder
+                    socket.emit("voice-answer", {
+                        targetId: from,
+                        answer: answer
+                    });
+                    
+                    // Görüşme başladı
+                    hideCallModal();
+                    showVoiceIndicator(fromUsername);
+                    
+                } catch (error) {
+                    console.error("Arama kabul edilemedi:", error);
+                    showNotification("Mikrofon erişimi reddedildi!");
+                    endVoiceCall();
+                }
+            };
+        });
+        
+        // Answer geldi
+        socket.on("voice-answer", async (data) => {
+            const { answer } = data;
+            
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                hideCallModal();
+                showVoiceIndicator(document.getElementById("voiceCallName").textContent);
+            }
+        });
+        
+        // ICE candidate geldi
+        socket.on("ice-candidate", async (data) => {
+            const { candidate } = data;
+            
+            if (peerConnection) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        });
+        
+        // Arama sonlandı
+        socket.on("voice-call-ended", () => {
+            endVoiceCall();
+            showNotification("Görüşme sonlandırıldı");
+        });
+        
+        function showCallModal(name, avatar, status, showAccept) {
+            document.getElementById("voiceCallAvatar").textContent = avatar;
+            document.getElementById("voiceCallName").textContent = name;
+            document.getElementById("voiceCallStatus").textContent = status;
+            document.getElementById("acceptCallBtn").style.display = showAccept ? "block" : "none";
+            document.getElementById("voiceCallModal").classList.add("show");
+        }
+        
+        function hideCallModal() {
+            document.getElementById("voiceCallModal").classList.remove("show");
+        }
+        
+        function showVoiceIndicator(name) {
+            document.getElementById("voiceIndicatorText").textContent = `${name} ile görüşme`;
+            document.getElementById("voiceIndicator").classList.add("show");
+        }
+        
+        function hideVoiceIndicator() {
+            document.getElementById("voiceIndicator").classList.remove("show");
+        }
+        
+        function endVoiceCall() {
+            // Stream'leri kapat
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Peer connection'ı kapat
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            // Karşı tarafa bildir
+            if (currentCallTarget) {
+                socket.emit("end-voice-call", currentCallTarget);
+                currentCallTarget = null;
+            }
+            
+            // UI'ı temizle
+            hideCallModal();
+            hideVoiceIndicator();
+            isMuted = false;
+        }
+        
+        function toggleMute() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    isMuted = !audioTrack.enabled;
+                    document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
+                }
+            }
+        }
+        
+        // Buton olayları
+        document.getElementById("rejectCallBtn").onclick = endVoiceCall;
+        document.getElementById("endCallBtn").onclick = endVoiceCall;
+        document.getElementById("muteBtn").onclick = toggleMute;
+        
     </script>
 </body>
 </html>
