@@ -1078,6 +1078,38 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
+/* Hamburger Menu Button */
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: grey;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 5px;
+    transition: 0.3s;
+}
+
+.hamburger-btn:hover {
+    color: #74b9ff;
+}
+
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .sidebar {
@@ -1091,20 +1123,41 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
     }
     
     .main-container {
-        flex-direction: column;
         height: 100vh;
         border-radius: 0;
     }
     
+    /* Hamburger butonu göster */
+    .hamburger-btn {
+        display: block;
+    }
+    
+    /* Sidebar'ı gizle ve sol taraftan açılır yap */
     .sidebar {
-        width: 100%;
-        max-height: 40vh;
-        border-right: none;
-        border-bottom: 1px solid #e0e0e0;
+        position: fixed;
+        left: -100%;
+        top: 0;
+        width: 80%;
+        max-width: 320px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        border-right: 1px solid #e0e0e0;
+        border-bottom: none;
     }
     
     body.dark-mode .sidebar {
-        border-bottom: 1px solid #3a3a4e;
+        border-right: 1px solid #3a3a4e;
+    }
+    
+    /* Sidebar açık olduğunda */
+    .sidebar.open {
+        left: 0;
+    }
+    
+    /* Container tam genişlik */
+    .container {
+        width: 100%;
     }
     
     .messages {
@@ -1118,11 +1171,24 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
     .user-info-header {
         display: none;
     }
+    
+    /* Header'da hamburger için yer aç */
+    .header-left {
+        gap: 8px;
+    }
+    
+    .header-left h1 {
+        font-size: 15px;
+    }
+    
+    .online {
+        font-size: 12px;
+    }
 }
 
 @media (max-width: 480px) {
     .sidebar {
-        max-height: 35vh;
+        width: 85%;
     }
     
     .header {
@@ -1135,6 +1201,20 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
     
     .message {
         max-width: 85%;
+    }
+    
+    .header-left h1 {
+        font-size: 14px;
+    }
+    
+    .header-right {
+        gap: 8px;
+    }
+    
+    .theme-toggle, .file-btn {
+        font-size: 20px;
+        width: 36px;
+        height: 36px;
     }
 }
 
