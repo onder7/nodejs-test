@@ -42,11 +42,12 @@ app.get("/test", (req, res) => {
 let onlineUsers = 0;
 const users = new Map(); // Kullanıcı bilgilerini sakla
 const sessions = new Map(); // Session bilgileri (sessionId -> userData)
-const messageHistory = []; // Son 50 mesajı sakla
-const MAX_HISTORY = 50;
+const messageHistory = new Map(); // Oda bazlı mesaj geçmişi (roomId -> mesajlar)
+const MAX_HISTORY_PER_ROOM = 100; // Her oda için 100 mesaj
 const rooms = new Map(); // Oda sistemi
 const userRooms = new Map(); // Kullanıcı-oda eşleşmeleri
 const privateMessages = new Map(); // Özel mesaj geçmişi (socketId -> mesajlar)
+const MAX_PRIVATE_MESSAGES = 200; // Her kullanıcı için 200 özel mesaj
 const admins = new Set(["admin", "onder7"]); // Admin kullanıcı adları
 const bannedUsers = new Set(); // Yasaklı kullanıcılar
 const mutedUsers = new Map(); // Susturulmuş kullanıcılar (socketId -> süre)
@@ -58,6 +59,11 @@ const MAX_LOGS = 1000;
 rooms.set("genel", { name: "Genel", users: new Set() });
 rooms.set("teknoloji", { name: "Teknoloji", users: new Set() });
 rooms.set("oyun", { name: "Oyun", users: new Set() });
+
+// Her oda için mesaj geçmişi başlat
+messageHistory.set("genel", []);
+messageHistory.set("teknoloji", []);
+messageHistory.set("oyun", []);
 
 // Log fonksiyonu
 function addLog(type, action, user, details = {}) {
@@ -106,8 +112,8 @@ io.on("connection", (socket) => {
   // Yeni kullanıcıya hoş geldin mesajı
   socket.emit("serverMessage", "Socket.IO çalışıyor! Hoş geldin! 🎉");
   
-  // Mesaj geçmişini gönder
-  socket.emit("messageHistory", messageHistory);
+  // Genel oda mesaj geçmişini gönder
+  socket.emit("messageHistory", messageHistory.get("genel") || []);
   
   // Herkese online kullanıcı sayısını gönder
   io.emit("userCount", onlineUsers);
@@ -221,10 +227,14 @@ io.on("connection", (socket) => {
       isAdmin: user.isAdmin
     };
     
-    // Mesajı geçmişe ekle
-    messageHistory.push(messageData);
-    if (messageHistory.length > MAX_HISTORY) {
-      messageHistory.shift();
+    // Odaya özel mesaj geçmişine ekle
+    if (!messageHistory.has(room)) {
+      messageHistory.set(room, []);
+    }
+    const roomHistory = messageHistory.get(room);
+    roomHistory.push(messageData);
+    if (roomHistory.length > MAX_HISTORY_PER_ROOM) {
+      roomHistory.shift();
     }
     
     // Log ekle
@@ -270,8 +280,19 @@ io.on("connection", (socket) => {
     if (!privateMessages.has(socket.id)) privateMessages.set(socket.id, []);
     if (!privateMessages.has(targetUser[0])) privateMessages.set(targetUser[0], []);
     
-    privateMessages.get(socket.id).push(messageData);
-    privateMessages.get(targetUser[0]).push(messageData);
+    const senderMessages = privateMessages.get(socket.id);
+    const targetMessages = privateMessages.get(targetUser[0]);
+    
+    senderMessages.push(messageData);
+    targetMessages.push(messageData);
+    
+    // Mesaj limitini kontrol et
+    if (senderMessages.length > MAX_PRIVATE_MESSAGES) {
+      senderMessages.shift();
+    }
+    if (targetMessages.length > MAX_PRIVATE_MESSAGES) {
+      targetMessages.shift();
+    }
     
     // Gönderene ve alıcıya gönder
     socket.emit("privateMessage", messageData);
@@ -319,11 +340,12 @@ io.on("connection", (socket) => {
     const { messageId, newMessage } = data;
     const room = userRooms.get(socket.id) || "genel";
     
-    // Mesaj geçmişinde güncelle
-    const msgIndex = messageHistory.findIndex(m => m.id === messageId && m.id === socket.id);
+    // Odanın mesaj geçmişinde güncelle
+    const roomHistory = messageHistory.get(room) || [];
+    const msgIndex = roomHistory.findIndex(m => m.id === messageId && m.id === socket.id);
     if (msgIndex !== -1) {
-      messageHistory[msgIndex].message = newMessage;
-      messageHistory[msgIndex].edited = true;
+      roomHistory[msgIndex].message = newMessage;
+      roomHistory[msgIndex].edited = true;
       io.to(room).emit("messageEdited", { messageId, newMessage });
     }
   });
@@ -332,10 +354,11 @@ io.on("connection", (socket) => {
   socket.on("deleteMessage", (messageId) => {
     const room = userRooms.get(socket.id) || "genel";
     
-    // Mesaj geçmişinden sil
-    const msgIndex = messageHistory.findIndex(m => m.id === messageId && m.id === socket.id);
+    // Odanın mesaj geçmişinden sil
+    const roomHistory = messageHistory.get(room) || [];
+    const msgIndex = roomHistory.findIndex(m => m.id === messageId && m.id === socket.id);
     if (msgIndex !== -1) {
-      messageHistory.splice(msgIndex, 1);
+      roomHistory.splice(msgIndex, 1);
       io.to(room).emit("messageDeleted", messageId);
     }
   });
@@ -356,6 +379,10 @@ io.on("connection", (socket) => {
     rooms.get(roomId)?.users.add(socket.id);
     userRooms.set(socket.id, roomId);
     user.room = roomId;
+    
+    // Yeni odanın mesaj geçmişini gönder
+    const roomHistory = messageHistory.get(roomId) || [];
+    socket.emit("messageHistory", roomHistory);
     
     io.to(roomId).emit("serverMessage", `${user.username} odaya katıldı! 👋`);
     socket.emit("currentRoom", roomId);
@@ -459,9 +486,18 @@ io.on("connection", (socket) => {
     const user = users.get(socket.id);
     if (!user || !user.isAdmin) return;
     
+    // Tüm odaların toplam mesaj sayısı
+    let totalMessages = 0;
+    messageHistory.forEach(roomMessages => {
+      totalMessages += roomMessages.length;
+    });
+    
+    // Genel odanın son mesajları
+    const generalRoomMessages = messageHistory.get("genel") || [];
+    
     const stats = {
       totalUsers: users.size,
-      totalMessages: messageHistory.length,
+      totalMessages: totalMessages,
       totalRooms: rooms.size,
       bannedCount: bannedUsers.size,
       mutedCount: mutedUsers.size,
@@ -470,9 +506,10 @@ io.on("connection", (socket) => {
       roomStats: Array.from(rooms.entries()).map(([id, room]) => ({
         id,
         name: room.name,
-        userCount: room.users.size
+        userCount: room.users.size,
+        messageCount: (messageHistory.get(id) || []).length
       })),
-      recentMessages: messageHistory.slice(-10)
+      recentMessages: generalRoomMessages.slice(-10)
     };
     
     socket.emit("adminStats", stats);
@@ -556,6 +593,7 @@ io.on("connection", (socket) => {
     }
     
     rooms.set(roomId, { name: roomName, users: new Set() });
+    messageHistory.set(roomId, []); // Yeni oda için mesaj geçmişi başlat
     
     addLog("admin", "create_room", user.username, { 
       roomId,
@@ -668,17 +706,25 @@ io.on("connection", (socket) => {
       return;
     }
     
-    const messageCount = messageHistory.length;
-    messageHistory.length = 0;
+    // Tüm odaların mesaj sayısını hesapla
+    let totalMessageCount = 0;
+    messageHistory.forEach(roomMessages => {
+      totalMessageCount += roomMessages.length;
+    });
+    
+    // Tüm odaların mesaj geçmişini temizle
+    messageHistory.forEach((roomMessages, roomId) => {
+      roomMessages.length = 0;
+    });
     
     addLog("admin", "clear_chat", user.username, { 
-      messageCount,
+      messageCount: totalMessageCount,
       socketId: socket.id,
       ip: user.ip
     });
     
     io.emit("chatHistoryCleared");
-    socket.emit("adminActionSuccess", `${messageCount} mesaj silindi!`);
+    socket.emit("adminActionSuccess", `${totalMessageCount} mesaj silindi!`);
   });
   
   // Admin - Tüm kullanıcıları getir
@@ -785,9 +831,15 @@ io.on("connection", (socket) => {
 
 // API endpoint'leri
 app.get("/api/stats", (req, res) => {
+  // Tüm odaların toplam mesaj sayısı
+  let totalMessages = 0;
+  messageHistory.forEach(roomMessages => {
+    totalMessages += roomMessages.length;
+  });
+  
   res.json({
     onlineUsers,
-    totalMessages: messageHistory.length,
+    totalMessages: totalMessages,
     totalRooms: rooms.size,
     bannedUsers: bannedUsers.size,
     mutedUsers: mutedUsers.size,
