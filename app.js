@@ -1,28 +1,55 @@
 const express = require("express");
-const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-const port = process.env.PORT || 3000;
+const http = require("http");
+const { Server } = require("socket.io");
 
-// Public klasörünü servis et
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
 app.use(express.static("public"));
 
-// Ana sayfa
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+app.get("/test", (req, res) => {
+  res.send("Node.js ÇALIŞIYOR ✔");
 });
 
-// Socket.IO
+let onlineUsers = 0;
+
 io.on("connection", (socket) => {
-  console.log("Bir kullanıcı bağlandı");
-
-  socket.emit("hello", "Socket.IO çalışıyor!");
-
+  onlineUsers++;
+  console.log("Kullanıcı bağlandı:", socket.id, "- Toplam:", onlineUsers);
+  
+  // Yeni kullanıcıya hoş geldin mesajı
+  socket.emit("serverMessage", "Socket.IO çalışıyor! Hoş geldin! 🎉");
+  
+  // Herkese online kullanıcı sayısını gönder
+  io.emit("userCount", onlineUsers);
+  
+  // Chat mesajı geldiğinde
+  socket.on("chatMessage", (msg) => {
+    const timestamp = new Date().toLocaleTimeString("tr-TR");
+    io.emit("chatMessage", {
+      id: socket.id.substring(0, 6),
+      message: msg,
+      time: timestamp
+    });
+  });
+  
+  // Kullanıcı yazıyor bildirimi
+  socket.on("typing", (isTyping) => {
+    socket.broadcast.emit("userTyping", {
+      id: socket.id.substring(0, 6),
+      typing: isTyping
+    });
+  });
+  
   socket.on("disconnect", () => {
-    console.log("Bir kullanıcı ayrıldı");
+    onlineUsers--;
+    console.log("Kullanıcı ayrıldı:", socket.id, "- Toplam:", onlineUsers);
+    io.emit("userCount", onlineUsers);
   });
 });
 
-http.listen(port, () => {
-  console.log("Sunucu çalışıyor:", port);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log("Node.js test sunucusu çalışıyor: PORT " + PORT);
 });
