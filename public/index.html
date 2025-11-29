@@ -6,719 +6,15 @@
     <title>WhatsApp Chat</title>
     <link rel="stylesheet" href="/styles.css">
     <script src="/socket.io/socket.io.js"></script>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-        body.dark-mode {
-            background: #18191a;
-        }
-        .main-container {
-            display: flex;
-            gap: 20px;
-            width: 95%;
-            max-width: 1200px;
-            height: 90vh;
-        }
-        .sidebar {
-            background: white;
-            border-radius: 12px;
-            width: 280px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-        body.dark-mode .sidebar {
-            background: #242526;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                max-height: 200px;
-                border-radius: 12px 12px 0 0;
-            }
-        }
-        .sidebar h3 {
-            color: #050505;
-            margin-bottom: 15px;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        body.dark-mode .sidebar h3 {
-            color: #e4e6eb;
-        }
-        .room-item {
-            padding: 10px 12px;
-            margin-bottom: 4px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #050505;
-        }
-        .room-item:hover {
-            background: #f0f2f5;
-        }
-        body.dark-mode .room-item {
-            color: #e4e6eb;
-        }
-        body.dark-mode .room-item:hover {
-            background: #3a3b3c;
-        }
-        .room-item.active {
-            background: #e7f3ff;
-            color: #4267B2;
-            font-weight: 600;
-        }
-        body.dark-mode .room-item.active {
-            background: #3a3b3c;
-            color: #2d88ff;
-        }
-        .room-badge {
-            background: rgba(255,255,255,0.3);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-        .user-item {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: background 0.2s;
-            position: relative;
-        }
-        .user-item:hover {
-            background: #f0f0f0;
-        }
-        body.dark-mode .user-item:hover {
-            background: #16213e;
-        }
-        .user-info-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .user-avatar {
-            font-size: 24px;
-        }
-        .user-name {
-            font-size: 14px;
-            font-weight: 500;
-        }
-        body.dark-mode .user-name {
-            color: #e0e0e0;
-        }
-        .admin-badge {
-            background: #ffc107;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 5px;
-            font-size: 10px;
-            margin-left: 5px;
-        }
-        .unread-badge {
-            background: #f44336;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        .dm-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .dm-modal.show {
-            display: flex;
-        }
-        .dm-content {
-            background: white;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 600px;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        body.dark-mode .dm-content {
-            background: #0f3460;
-        }
-        .dm-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .dm-header h3 {
-            font-size: 20px;
-        }
-        .dm-close {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-        }
-        .dm-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        body.dark-mode .dm-messages {
-            background: #16213e;
-        }
-        .dm-input-area {
-            padding: 20px;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            border-top: 1px solid #eee;
-        }
-        body.dark-mode .dm-input-area {
-            background: #0f3460;
-            border-top: 1px solid #1a1a2e;
-        }
-        .dm-input-group {
-            display: flex;
-            gap: 10px;
-        }
-        .dm-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #eee;
-            border-radius: 25px;
-            font-size: 15px;
-            outline: none;
-        }
-        body.dark-mode .dm-input {
-            background: #16213e;
-            border-color: #1a1a2e;
-            color: white;
-        }
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 3000;
-            animation: slideIn 0.3s ease;
-        }
-        .notification.show {
-            display: block;
-        }
-        body.dark-mode .notification {
-            background: #0f3460;
-            color: white;
-        }
-        .voice-call-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            z-index: 3000;
-            display: none;
-            text-align: center;
-            min-width: 300px;
-        }
-        body.dark-mode .voice-call-modal {
-            background: #0f3460;
-            color: white;
-        }
-        .voice-call-modal.show {
-            display: block;
-        }
-        .voice-call-avatar {
-            font-size: 64px;
-            margin-bottom: 15px;
-        }
-        .voice-call-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .voice-call-status {
-            color: #999;
-            margin-bottom: 20px;
-        }
-        .voice-call-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-        .voice-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .voice-btn:hover {
-            transform: scale(1.1);
-        }
-        .voice-btn-accept {
-            background: #4caf50;
-            color: white;
-        }
-        .voice-btn-reject {
-            background: #f44336;
-            color: white;
-        }
-        .voice-btn-end {
-            background: #f44336;
-            color: white;
-        }
-        .voice-btn-mute {
-            background: #ff9800;
-            color: white;
-        }
-        .voice-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #4caf50;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 50px;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            z-index: 2500;
-            animation: pulse 2s infinite;
-        }
-        .voice-indicator.show {
-            display: flex;
-        }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5); }
-            50% { box-shadow: 0 5px 30px rgba(76, 175, 80, 0.8); }
-        }
-        .voice-icon-btn {
-            background: #4caf50;
-            border: none;
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.3s;
-            margin-left: 5px;
-        }
-        .voice-icon-btn:hover {
-            transform: scale(1.1);
-        }
-        .container {
-            flex: 1;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        body.dark-mode .container {
-            background: #242526;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        @media (max-width: 768px) {
-            .container {
-                border-radius: 0 0 12px 12px;
-            }
-        }
-        .header {
-            background: #4267B2;
-            color: white;
-            padding: 16px 20px;
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        body.dark-mode .header {
-            background: #3a3b3c;
-        }
-        @media (max-width: 768px) {
-            .header {
-                padding: 12px 15px;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-        }
-        .header-left h1 { font-size: 24px; margin-bottom: 5px; }
-        .online { font-size: 14px; opacity: 0.9; }
-        .user-info-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255,255,255,0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        .user-info-header:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .user-info-header .avatar {
-            font-size: 20px;
-        }
-        .user-info-header .username {
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .header-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .theme-toggle, .file-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.3s;
-        }
-        .theme-toggle:hover, .file-btn:hover {
-            transform: scale(1.1);
-        }
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f0f2f5;
-        }
-        body.dark-mode .messages {
-            background: #18191a;
-        }
-        .message {
-            background: white;
-            padding: 10px 14px;
-            margin-bottom: 8px;
-            border-radius: 18px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            position: relative;
-            max-width: 80%;
-        }
-        body.dark-mode .message {
-            background: #3a3b3c;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-        .message.private {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-        body.dark-mode .message.private {
-            background: #3d3520;
-            border-left: 4px solid #ffc107;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #666;
-        }
-        body.dark-mode .message-header {
-            color: #aaa;
-        }
-        .message-user {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-        }
-        .message-actions {
-            display: none;
-            gap: 5px;
-        }
-        .message:hover .message-actions {
-            display: flex;
-        }
-        .message-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        .message-btn:hover {
-            opacity: 1;
-        }
-        .message-text { color: #333; font-size: 15px; word-wrap: break-word; }
-        body.dark-mode .message-text {
-            color: #e0e0e0;
-        }
-        .message-edited {
-            font-size: 11px;
-            color: #999;
-            font-style: italic;
-            margin-top: 3px;
-        }
-        .system-message {
-            text-align: center;
-            color: #999;
-            font-size: 13px;
-            margin: 10px 0;
-            font-style: italic;
-        }
-        body.dark-mode .system-message {
-            color: #666;
-        }
-        .typing-indicator {
-            color: #667eea;
-            font-size: 13px;
-            padding: 10px 20px;
-            font-style: italic;
-        }
-        .input-area {
-            padding: 20px;
-            background: white;
-            border-radius: 0 0 20px 20px;
-            border-top: 1px solid #eee;
-            transition: background 0.3s;
-        }
-        body.dark-mode .input-area {
-            background: #0f3460;
-            border-top: 1px solid #1a1a2e;
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
-        #messageInput {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 15px;
-            outline: none;
-            background: #f0f2f5;
-        }
-        #messageInput:focus {
-            border-color: #4267B2;
-            background: white;
-        }
-        body.dark-mode #messageInput {
-            background: #3a3b3c;
-            border-color: #3a3b3c;
-            color: #e4e6eb;
-        }
-        body.dark-mode #messageInput:focus {
-            border-color: #2d88ff;
-        }
-        #sendBtn {
-            background: #4267B2;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        #sendBtn:hover {
-            background: #365899;
-        }
-        body.dark-mode #sendBtn {
-            background: #2d88ff;
-        }
-        body.dark-mode #sendBtn:hover {
-            background: #1877f2;
-        }
-        .emoji-btn {
-            background: #f0f0f0;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.2s;
-        }
-        body.dark-mode .emoji-btn {
-            background: #16213e;
-        }
-        .emoji-btn:hover {
-            transform: scale(1.05);
-        }
-        .emoji-picker {
-            position: absolute;
-            bottom: 80px;
-            right: 20px;
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            display: none;
-            max-width: 300px;
-            flex-wrap: wrap;
-            gap: 5px;
-            z-index: 100;
-        }
-        body.dark-mode .emoji-picker {
-            background: #0f3460;
-        }
-        .emoji-picker.show {
-            display: flex;
-        }
-        .emoji-picker span {
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-        .emoji-picker span:hover {
-            background: #f0f0f0;
-        }
-        body.dark-mode .emoji-picker span:hover {
-            background: #16213e;
-        }
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        body.dark-mode .modal-content {
-            background: #0f3460;
-            color: white;
-        }
-        .modal h2 {
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-        .modal input, .modal textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            outline: none;
-            font-family: inherit;
-        }
-        body.dark-mode .modal input, body.dark-mode .modal textarea {
-            background: #16213e;
-            border-color: #1a1a2e;
-            color: white;
-        }
-        .modal button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin: 5px;
-        }
-        .avatar-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-        .avatar-option {
-            font-size: 32px;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 10px;
-            transition: background 0.2s;
-        }
-        .avatar-option:hover, .avatar-option.selected {
-            background: #f0f0f0;
-        }
-        body.dark-mode .avatar-option:hover, body.dark-mode .avatar-option.selected {
-            background: #16213e;
-        }
-        .file-upload {
-            display: none;
-        }
-        .file-preview {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 10px;
-            margin-top: 10px;
-        }
-        @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-            }
+
+    
 </head>
 <body>
     <div class="modal" id="usernameModal">
         <div class="modal-content">
-            <h2>≡ƒæï Ho┼ƒ Geldiniz!</h2>
+            <h2>≡ Hoş Geldiniz!</h2>
             <p>Profil bilgilerinizi girin:</p>
-            <input type="text" id="usernameInput" placeholder="Kullan─▒c─▒ ad─▒n─▒z..." maxlength="20">
+            <input type="text" id="usernameInput" placeholder="kullanıcı ad─▒n─▒z..." maxlength="20">
             <p style="margin: 10px 0; font-size: 14px;">Avatar se├ºin:</p>
             <div class="avatar-picker" id="avatarPicker"></div>
             <button id="usernameBtn">Sohbete Kat─▒l</button>
@@ -728,8 +24,8 @@
     <div class="notification" id="notification"></div>
 
     <div class="voice-call-modal" id="voiceCallModal">
-        <div class="voice-call-avatar" id="voiceCallAvatar">≡ƒæñ</div>
-        <div class="voice-call-name" id="voiceCallName">Kullan─▒c─▒</div>
+        <div class="voice-call-avatar" id="voiceCallAvatar">≡</div>
+        <div class="voice-call-name" id="voiceCallName">kullanıcı</div>
         <div class="voice-call-status" id="voiceCallStatus">Aran─▒yor...</div>
         <div class="voice-call-buttons" id="voiceCallButtons">
             <button class="voice-btn voice-btn-accept" id="acceptCallBtn" style="display: none;">📞</button>
@@ -738,23 +34,23 @@
     </div>
 
     <div class="voice-indicator" id="voiceIndicator">
-        <span>≡ƒÄñ</span>
+        <span>≡</span>
         <span id="voiceIndicatorText">Sesli g├╢r├╝┼ƒme aktif</span>
-        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">≡ƒöç</button>
-        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">≡ƒô╡</button>
+        <button class="voice-btn-mute" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer; margin-left: 10px;" id="muteBtn">≡</button>
+        <button class="voice-btn-end" style="width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;" id="endCallBtn">≡╡</button>
     </div>
 
     <div class="dm-modal" id="dmModal">
         <div class="dm-content">
             <div class="dm-header">
-                <h3 id="dmTitle">≡ƒÆ¼ ├ûzel Mesaj</h3>
-                <button class="dm-close" onclick="closeDM()">├ù</button>
+                <h3 id="dmTitle">≡¼ ├Özel Mesaj</h3>
+                <button class="dm-close" onclick="closeDM()">├</button>
             </div>
             <div class="dm-messages" id="dmMessages"></div>
             <div class="dm-input-area">
                 <div class="dm-input-group">
-                    <input type="text" class="dm-input" id="dmInput" placeholder="├ûzel mesaj─▒n─▒z─▒ yaz─▒n...">
-                    <button id="dmSendBtn" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer;">G├╢nder</button>
+                    <input type="text" class="dm-input" id="dmInput" placeholder="├Özel mesajınızı yazın...">
+                    <button id="dmSendBtn" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer;">Gönder</button>
                 </div>
             </div>
         </div>
@@ -776,22 +72,22 @@
         <div class="container">
             <div class="header">
                 <div class="header-left">
-                    <h1 id="roomTitle">≡ƒÆ¼ Genel</h1>
-                    <div class="online">≡ƒƒó Online: <span id="userCount">0</span> kullan─▒c─▒</div>
+                    <h1 id="roomTitle">≡¼ Genel</h1>
+                    <div class="online">≡ Online: <span id="userCount">0</span> kullanıcı</div>
                 </div>
                 <div class="header-right">
                     <div class="user-info-header" id="userInfoHeader" style="display: none;">
-                        <span class="avatar" id="headerAvatar">≡ƒæñ</span>
-                        <span class="username" id="headerUsername">Kullan─▒c─▒</span>
+                        <span class="avatar" id="headerAvatar">≡</span>
+                        <span class="username" id="headerUsername">kullanıcı</span>
                     </div>
                     <input type="file" id="fileInput" class="file-upload" accept="image/*">
-                    <button class="file-btn" id="fileBtn" title="Dosya G├╢nder">≡ƒôÄ</button>
-                    <button class="theme-toggle" id="themeToggle">≡ƒîÖ</button>
+                    <button class="file-btn" id="fileBtn" title="Dosya Gönder">≡Ä</button>
+                    <button class="theme-toggle" id="themeToggle">≡</button>
                 </div>
             </div>
             
             <div class="messages" id="messages">
-                <div class="system-message">Chat'e ho┼ƒ geldiniz! ≡ƒæï</div>
+                <div class="system-message">Chat'e Hoş Geldiniz! ≡</div>
             </div>
             
             <div class="typing-indicator" id="typingIndicator"></div>
@@ -800,9 +96,9 @@
             
             <div class="input-area">
                 <div class="input-group">
-                    <button class="emoji-btn" id="emojiBtn">≡ƒÿè</button>
+                    <button class="emoji-btn" id="emojiBtn">≡</button>
                     <input type="text" id="messageInput" placeholder="Mesaj─▒n─▒z─▒ yaz─▒n..." maxlength="500">
-                    <button id="sendBtn">G├╢nder</button>
+                    <button id="sendBtn">Gönder</button>
                 </div>
             </div>
         </div>
@@ -831,7 +127,7 @@
         let typingTimer;
         let username = "";
         let userColor = "#667eea";
-        let selectedAvatar = "≡ƒæñ";
+        let selectedAvatar = "≡";
         let currentRoom = "genel";
         let editingMessageId = null;
         let currentDMTarget = null;
@@ -861,7 +157,7 @@
                 div.classList.add("selected");
                 selectedAvatar = avatar;
             };
-            if (avatar === "≡ƒæñ") div.classList.add("selected");
+            if (avatar === "≡") div.classList.add("selected");
             avatarPicker.appendChild(div);
         });
         
@@ -923,18 +219,18 @@
             userColor = userData.color;
             isAdmin = userData.isAdmin;
             
-            // Modal'─▒ kapat ve kullan─▒c─▒ bilgilerini ayarla
+            // Modal'─▒ kapat ve kullanıcı bilgilerini ayarla
             usernameModal.style.display = "none";
             socket.emit("setUsername", { username, avatar: selectedAvatar });
             messageInput.focus();
             
-            // Header'da kullan─▒c─▒ bilgisini g├╢ster
+            // Header'da kullanıcı bilgisini g├╢ster
             updateHeaderUserInfo();
             
-            showNotification(`Tekrar ho┼ƒ geldin, ${username}! ≡ƒæï`);
+            showNotification(`Tekrar ho┼ƒ geldin, ${username}! ≡`);
         });
 
-        // Header'da kullan─▒c─▒ bilgisini g├╝ncelle
+        // Header'da kullanıcı bilgisini g├╝ncelle
         function updateHeaderUserInfo() {
             const userInfoHeader = document.getElementById("userInfoHeader");
             const headerAvatar = document.getElementById("headerAvatar");
@@ -952,7 +248,7 @@
             }
         }
 
-        // Kullan─▒c─▒ ad─▒ modal
+        // kullanıcı ad─▒ modal
         usernameBtn.addEventListener("click", () => {
             const name = usernameInput.value.trim();
             if (name) {
@@ -961,7 +257,7 @@
                 usernameModal.style.display = "none";
                 messageInput.focus();
                 
-                // Header'da kullan─▒c─▒ bilgisini g├╢ster
+                // Header'da kullanıcı bilgisini g├╢ster
                 updateHeaderUserInfo();
             }
         });
@@ -1061,8 +357,8 @@
                 div.onclick = () => {
                     socket.emit("joinRoom", room.id);
                     currentRoom = room.id;
-                    messagesDiv.innerHTML = '<div class="system-message">Odaya ho┼ƒ geldiniz! ≡ƒæï</div>';
-                    roomTitle.textContent = `≡ƒÆ¼ ${room.name}`;
+                    messagesDiv.innerHTML = '<div class="system-message">Odaya Hoş Geldiniz! ≡</div>';
+                    roomTitle.textContent = `≡¼ ${room.name}`;
                 };
                 roomList.appendChild(div);
             });
@@ -1088,7 +384,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px;">
                         ${user.unreadCount > 0 ? `<span class="unread-badge">${user.unreadCount}</span>` : ''}
-                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">≡ƒÄñ</button>
+                        <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">≡</button>
                     </div>
                 `;
                 div.onclick = () => openDM(user.id, user.username);
@@ -1098,7 +394,7 @@
 
         function openDM(userId, username) {
             currentDMTarget = userId;
-            document.getElementById("dmTitle").textContent = `≡ƒÆ¼ ${username}`;
+            document.getElementById("dmTitle").textContent = `≡¼ ${username}`;
             document.getElementById("dmModal").classList.add("show");
             document.getElementById("dmMessages").innerHTML = "";
             document.getElementById("dmInput").focus();
@@ -1126,7 +422,7 @@
                 addDMMessage(data);
             }
             
-            // Online kullan─▒c─▒ listesini g├╝ncelle
+            // Online kullanıcı listesini g├╝ncelle
             socket.emit("getOnlineUsers");
         });
 
@@ -1209,7 +505,7 @@
         });
 
         socket.on("muted", (reason) => {
-            showNotification("≡ƒöç " + reason);
+            showNotification("≡ " + reason);
         });
 
         socket.on("unmuted", (reason) => {
@@ -1223,21 +519,21 @@
         socket.on("roomDeleted", (message) => {
             showNotification(message);
             currentRoom = "genel";
-            roomTitle.textContent = "≡ƒÆ¼ Genel";
+            roomTitle.textContent = "≡¼ Genel";
         });
 
         socket.on("chatHistoryCleared", () => {
             messagesDiv.innerHTML = '<div class="system-message">Sohbet ge├ºmi┼ƒi admin taraf─▒ndan temizlendi</div>';
         });
 
-        // Mesaj g├╢nder
+        // Mesaj Gönder
         function sendMessage() {
             const msg = messageInput.value.trim();
             if (msg) {
                 if (editingMessageId) {
                     socket.emit("editMessage", { messageId: editingMessageId, newMessage: msg });
                     editingMessageId = null;
-                    sendBtn.textContent = "G├╢nder";
+                    sendBtn.textContent = "Gönder";
                 } else {
                     socket.emit("chatMessage", msg);
                 }
@@ -1322,7 +618,7 @@
             return div.innerHTML;
         }
 
-        // Online kullan─▒c─▒lar─▒ periyodik g├╝ncelle
+        // Online kullanıcılar─▒ periyodik g├╝ncelle
         setInterval(() => {
             socket.emit("getOnlineUsers");
         }, 5000);
@@ -1365,7 +661,7 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 
-                // Offer'─▒ g├╢nder
+                // Offer'─▒ Gönder
                 socket.emit("voice-offer", {
                     targetId: userId,
                     offer: offer
@@ -1425,7 +721,7 @@
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
                     
-                    // Answer'─▒ g├╢nder
+                    // Answer'─▒ Gönder
                     socket.emit("voice-answer", {
                         targetId: from,
                         answer: answer
@@ -1521,7 +817,7 @@
                 if (audioTrack) {
                     audioTrack.enabled = !audioTrack.enabled;
                     isMuted = !audioTrack.enabled;
-                    document.getElementById("muteBtn").textContent = isMuted ? "≡ƒöç" : "≡ƒÄñ";
+                    document.getElementById("muteBtn").textContent = isMuted ? "≡" : "≡";
                 }
             }
         }
