@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerçek Zamanlı Chat</title>
+    <title>Gelişmiş Chat Uygulaması</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,13 +19,90 @@
         body.dark-mode {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            width: 250px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: background 0.3s;
+            overflow-y: auto;
+        }
+        body.dark-mode .sidebar {
+            background: #0f3460;
+        }
+        .sidebar h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        body.dark-mode .sidebar h3 {
+            color: #8b9cff;
+        }
+        .room-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .room-item:hover {
+            background: #f0f0f0;
+        }
+        body.dark-mode .room-item:hover {
+            background: #16213e;
+        }
+        .room-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .room-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .user-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .user-item:hover {
+            background: #f0f0f0;
+        }
+        body.dark-mode .user-item:hover {
+            background: #16213e;
+        }
+        .user-avatar {
+            font-size: 24px;
+        }
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        body.dark-mode .user-name {
+            color: #e0e0e0;
+        }
         .container {
+            flex: 1;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 500px;
-            height: 600px;
             display: flex;
             flex-direction: column;
             transition: background 0.3s;
@@ -38,26 +115,28 @@
             color: white;
             padding: 20px;
             border-radius: 20px 20px 0 0;
-            text-align: center;
-            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header-left h1 { font-size: 24px; margin-bottom: 5px; }
         .online { font-size: 14px; opacity: 0.9; }
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+        .theme-toggle, .file-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            width: 35px;
-            height: 35px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
             transition: transform 0.3s;
         }
-        .theme-toggle:hover {
+        .theme-toggle:hover, .file-btn:hover {
             transform: scale(1.1);
         }
         .messages {
@@ -78,10 +157,19 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             animation: slideIn 0.3s ease;
             transition: background 0.3s;
+            position: relative;
         }
         body.dark-mode .message {
             background: #0f3460;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .message.private {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        body.dark-mode .message.private {
+            background: #3d3520;
+            border-left: 4px solid #ffc107;
         }
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -90,6 +178,7 @@
         .message-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 5px;
             font-size: 12px;
             color: #666;
@@ -97,10 +186,39 @@
         body.dark-mode .message-header {
             color: #aaa;
         }
-        .user-id { font-weight: bold; }
-        .message-text { color: #333; font-size: 15px; }
+        .message-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+        .message-actions {
+            display: none;
+            gap: 5px;
+        }
+        .message:hover .message-actions {
+            display: flex;
+        }
+        .message-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .message-btn:hover {
+            opacity: 1;
+        }
+        .message-text { color: #333; font-size: 15px; word-wrap: break-word; }
         body.dark-mode .message-text {
             color: #e0e0e0;
+        }
+        .message-edited {
+            font-size: 11px;
+            color: #999;
+            font-style: italic;
+            margin-top: 3px;
         }
         .system-message {
             text-align: center;
@@ -197,6 +315,7 @@
             max-width: 300px;
             flex-wrap: wrap;
             gap: 5px;
+            z-index: 100;
         }
         body.dark-mode .emoji-picker {
             background: #0f3460;
@@ -217,7 +336,7 @@
         body.dark-mode .emoji-picker span:hover {
             background: #16213e;
         }
-        .username-modal {
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -229,7 +348,7 @@
             align-items: center;
             z-index: 1000;
         }
-        .username-modal-content {
+        .modal-content {
             background: white;
             padding: 30px;
             border-radius: 20px;
@@ -237,29 +356,30 @@
             max-width: 400px;
             width: 90%;
         }
-        body.dark-mode .username-modal-content {
+        body.dark-mode .modal-content {
             background: #0f3460;
             color: white;
         }
-        .username-modal h2 {
+        .modal h2 {
             margin-bottom: 20px;
             color: #667eea;
         }
-        .username-modal input {
+        .modal input, .modal textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #eee;
             border-radius: 10px;
             font-size: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             outline: none;
+            font-family: inherit;
         }
-        body.dark-mode .username-modal input {
+        body.dark-mode .modal input, body.dark-mode .modal textarea {
             background: #16213e;
             border-color: #1a1a2e;
             color: white;
         }
-        .username-modal button {
+        .modal button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -268,39 +388,96 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
+            margin: 5px;
+        }
+        .avatar-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .avatar-option {
+            font-size: 32px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .avatar-option:hover, .avatar-option.selected {
+            background: #f0f0f0;
+        }
+        body.dark-mode .avatar-option:hover, body.dark-mode .avatar-option.selected {
+            background: #16213e;
+        }
+        .file-upload {
+            display: none;
+        }
+        .file-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="username-modal" id="usernameModal">
-        <div class="username-modal-content">
+    <div class="modal" id="usernameModal">
+        <div class="modal-content">
             <h2>👋 Hoş Geldiniz!</h2>
-            <p>Lütfen bir kullanıcı adı girin:</p>
+            <p>Profil bilgilerinizi girin:</p>
             <input type="text" id="usernameInput" placeholder="Kullanıcı adınız..." maxlength="20">
+            <p style="margin: 10px 0; font-size: 14px;">Avatar seçin:</p>
+            <div class="avatar-picker" id="avatarPicker"></div>
             <button id="usernameBtn">Sohbete Katıl</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="header">
-            <h1>💬 Gerçek Zamanlı Chat</h1>
-            <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
-            <button class="theme-toggle" id="themeToggle">🌙</button>
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>📁 Odalar</h3>
+            <div id="roomList"></div>
+            <h3 style="margin-top: 20px;">👥 Online Kullanıcılar</h3>
+            <div id="userList"></div>
         </div>
-        
-        <div class="messages" id="messages">
-            <div class="system-message">Chat'e hoş geldiniz! 👋</div>
-        </div>
-        
-        <div class="typing-indicator" id="typingIndicator"></div>
-        
-        <div class="emoji-picker" id="emojiPicker"></div>
-        
-        <div class="input-area">
-            <div class="input-group">
-                <button class="emoji-btn" id="emojiBtn">😊</button>
-                <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." maxlength="200">
-                <button id="sendBtn">Gönder</button>
+
+        <div class="container">
+            <div class="header">
+                <div class="header-left">
+                    <h1 id="roomTitle">💬 Genel</h1>
+                    <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
+                </div>
+                <div class="header-right">
+                    <input type="file" id="fileInput" class="file-upload" accept="image/*">
+                    <button class="file-btn" id="fileBtn" title="Dosya Gönder">📎</button>
+                    <button class="theme-toggle" id="themeToggle">🌙</button>
+                </div>
+            </div>
+            
+            <div class="messages" id="messages">
+                <div class="system-message">Chat'e hoş geldiniz! 👋</div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator"></div>
+            
+            <div class="emoji-picker" id="emojiPicker"></div>
+            
+            <div class="input-area">
+                <div class="input-group">
+                    <button class="emoji-btn" id="emojiBtn">😊</button>
+                    <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." maxlength="500">
+                    <button id="sendBtn">Gönder</button>
+                </div>
             </div>
         </div>
     </div>
@@ -318,15 +495,39 @@
         const usernameModal = document.getElementById("usernameModal");
         const usernameInput = document.getElementById("usernameInput");
         const usernameBtn = document.getElementById("usernameBtn");
+        const avatarPicker = document.getElementById("avatarPicker");
+        const roomList = document.getElementById("roomList");
+        const userList = document.getElementById("userList");
+        const roomTitle = document.getElementById("roomTitle");
+        const fileBtn = document.getElementById("fileBtn");
+        const fileInput = document.getElementById("fileInput");
 
         let typingTimer;
         let username = "";
         let userColor = "#667eea";
+        let selectedAvatar = "👤";
+        let currentRoom = "genel";
+        let editingMessageId = null;
+        
+        // Avatar seçenekleri
+        const avatars = ["👤", "😊", "😎", "🤓", "🥳", "🤠", "👨‍💻", "👩‍💻", "🧑‍🎨", "🦸", "🧙", "🐱", "🐶", "🦊", "🐼", "🦁"];
+        
+        avatars.forEach(avatar => {
+            const div = document.createElement("div");
+            div.className = "avatar-option";
+            div.textContent = avatar;
+            div.onclick = () => {
+                document.querySelectorAll(".avatar-option").forEach(el => el.classList.remove("selected"));
+                div.classList.add("selected");
+                selectedAvatar = avatar;
+            };
+            if (avatar === "👤") div.classList.add("selected");
+            avatarPicker.appendChild(div);
+        });
         
         // Emoji listesi
         const emojis = ["😊", "😂", "❤️", "👍", "🎉", "🔥", "✨", "💯", "🚀", "👋", "😍", "🤔", "😎", "🙌", "💪", "🎯", "⚡", "🌟", "💡", "🎊"];
         
-        // Emoji picker'ı doldur
         emojis.forEach(emoji => {
             const span = document.createElement("span");
             span.textContent = emoji;
@@ -343,7 +544,6 @@
             emojiPicker.classList.toggle("show");
         });
         
-        // Dışarı tıklanınca emoji picker'ı kapat
         document.addEventListener("click", (e) => {
             if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
                 emojiPicker.classList.remove("show");
@@ -357,30 +557,40 @@
             localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
         });
         
-        // Tema tercihini yükle
         if (localStorage.getItem("darkMode") === "true") {
             document.body.classList.add("dark-mode");
             themeToggle.textContent = "☀️";
         }
+        
+        // Dosya yükleme
+        fileBtn.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = `<img src="${e.target.result}" class="file-preview">`;
+                    socket.emit("chatMessage", `[Resim] ${img}`);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
         
         // Kullanıcı adı modal
         usernameBtn.addEventListener("click", () => {
             const name = usernameInput.value.trim();
             if (name) {
                 username = name;
-                socket.emit("setUsername", username);
+                socket.emit("setUsername", { username, avatar: selectedAvatar });
                 usernameModal.style.display = "none";
                 messageInput.focus();
             }
         });
         
         usernameInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                usernameBtn.click();
-            }
+            if (e.key === "Enter") usernameBtn.click();
         });
         
-        // Sayfa yüklendiğinde username modal'ı göster
         setTimeout(() => usernameInput.focus(), 100);
         
         // Ses bildirimi
@@ -390,34 +600,51 @@
             audio.play().catch(() => {});
         }
 
-        // Kullanıcı rengi
+        // Socket olayları
         socket.on("userColor", (color) => {
             userColor = color;
         });
         
-        // Mesaj geçmişi
         socket.on("messageHistory", (history) => {
             history.forEach(data => {
-                addMessage(data.username, data.color, data.message, data.time, false);
+                addMessage(data, false);
             });
         });
         
-        // Sunucu mesajı
         socket.on("serverMessage", (msg) => {
             addSystemMessage(msg);
         });
 
-        // Online kullanıcı sayısı
         socket.on("userCount", (count) => {
             userCountSpan.textContent = count;
         });
 
-        // Chat mesajı geldi
         socket.on("chatMessage", (data) => {
-            addMessage(data.username, data.color, data.message, data.time, true);
+            addMessage(data, true);
         });
 
-        // Kullanıcı yazıyor
+        socket.on("privateMessage", (data) => {
+            addMessage({...data, private: true}, true);
+        });
+
+        socket.on("messageEdited", (data) => {
+            const msgEl = document.querySelector(`[data-message-id="${data.messageId}"]`);
+            if (msgEl) {
+                msgEl.querySelector(".message-text").textContent = data.newMessage;
+                if (!msgEl.querySelector(".message-edited")) {
+                    const editedTag = document.createElement("div");
+                    editedTag.className = "message-edited";
+                    editedTag.textContent = "(düzenlendi)";
+                    msgEl.appendChild(editedTag);
+                }
+            }
+        });
+
+        socket.on("messageDeleted", (messageId) => {
+            const msgEl = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (msgEl) msgEl.remove();
+        });
+
         socket.on("userTyping", (data) => {
             if (data.typing) {
                 typingIndicator.textContent = `${data.username} yazıyor...`;
@@ -426,11 +653,60 @@
             }
         });
 
+        socket.on("roomList", (rooms) => {
+            roomList.innerHTML = "";
+            rooms.forEach(room => {
+                const div = document.createElement("div");
+                div.className = "room-item" + (room.id === currentRoom ? " active" : "");
+                div.innerHTML = `
+                    <span>${room.name}</span>
+                    <span class="room-badge">${room.userCount}</span>
+                `;
+                div.onclick = () => {
+                    socket.emit("joinRoom", room.id);
+                    currentRoom = room.id;
+                    messagesDiv.innerHTML = '<div class="system-message">Odaya hoş geldiniz! 👋</div>';
+                    roomTitle.textContent = `💬 ${room.name}`;
+                };
+                roomList.appendChild(div);
+            });
+        });
+
+        socket.on("currentRoom", (roomId) => {
+            currentRoom = roomId;
+            socket.emit("getOnlineUsers");
+        });
+
+        socket.on("onlineUsers", (users) => {
+            userList.innerHTML = "";
+            users.forEach(user => {
+                const div = document.createElement("div");
+                div.className = "user-item";
+                div.innerHTML = `
+                    <span class="user-avatar">${user.avatar}</span>
+                    <span class="user-name" style="color: ${user.color}">${user.username}</span>
+                `;
+                div.onclick = () => {
+                    const msg = prompt(`${user.username} kullanıcısına özel mesaj:`);
+                    if (msg) {
+                        socket.emit("privateMessage", { targetId: user.id, message: msg });
+                    }
+                };
+                userList.appendChild(div);
+            });
+        });
+
         // Mesaj gönder
         function sendMessage() {
             const msg = messageInput.value.trim();
             if (msg) {
-                socket.emit("chatMessage", msg);
+                if (editingMessageId) {
+                    socket.emit("editMessage", { messageId: editingMessageId, newMessage: msg });
+                    editingMessageId = null;
+                    sendBtn.textContent = "Gönder";
+                } else {
+                    socket.emit("chatMessage", msg);
+                }
                 messageInput.value = "";
                 socket.emit("typing", false);
             }
@@ -438,12 +714,9 @@
 
         sendBtn.addEventListener("click", sendMessage);
         messageInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                sendMessage();
-            }
+            if (e.key === "Enter") sendMessage();
         });
 
-        // Yazıyor bildirimi
         messageInput.addEventListener("input", () => {
             socket.emit("typing", true);
             clearTimeout(typingTimer);
@@ -453,26 +726,51 @@
         });
 
         // Mesaj ekle
-        function addMessage(username, color, message, time, playSound) {
+        function addMessage(data, playSound) {
             const msgDiv = document.createElement("div");
-            msgDiv.className = "message";
+            msgDiv.className = "message" + (data.private ? " private" : "");
+            msgDiv.setAttribute("data-message-id", data.id);
+            
+            const actions = data.id === socket.id ? `
+                <div class="message-actions">
+                    <button class="message-btn" onclick="editMessage('${data.id}', '${escapeHtml(data.message)}')">✏️</button>
+                    <button class="message-btn" onclick="deleteMessage('${data.id}')">🗑️</button>
+                </div>
+            ` : "";
+            
             msgDiv.innerHTML = `
                 <div class="message-header">
-                    <span class="user-id" style="color: ${color}">👤 ${username}</span>
-                    <span class="time">${time}</span>
+                    <div class="message-user">
+                        <span style="font-size: 20px">${data.avatar}</span>
+                        <span style="color: ${data.color}">${data.username}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="time">${data.time}</span>
+                        ${actions}
+                    </div>
                 </div>
-                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-text">${escapeHtml(data.message)}</div>
+                ${data.edited ? '<div class="message-edited">(düzenlendi)</div>' : ''}
             `;
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
             
-            // Ses çal (sadece yeni mesajlar için)
-            if (playSound) {
-                playNotificationSound();
+            if (playSound) playNotificationSound();
+        }
+
+        function editMessage(id, message) {
+            editingMessageId = id;
+            messageInput.value = message;
+            sendBtn.textContent = "Güncelle";
+            messageInput.focus();
+        }
+
+        function deleteMessage(id) {
+            if (confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+                socket.emit("deleteMessage", id);
             }
         }
 
-        // Sistem mesajı ekle
         function addSystemMessage(msg) {
             const msgDiv = document.createElement("div");
             msgDiv.className = "system-message";
@@ -481,14 +779,16 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // XSS koruması
         function escapeHtml(text) {
             const div = document.createElement("div");
             div.textContent = text;
             return div.innerHTML;
         }
 
-
+        // Online kullanıcıları periyodik güncelle
+        setInterval(() => {
+            socket.emit("getOnlineUsers");
+        }, 5000);
     </script>
 </body>
 </html>
