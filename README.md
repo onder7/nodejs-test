@@ -10,14 +10,20 @@ Modern ve özellik dolu bir Node.js + Express + Socket.IO chat uygulaması.
 - **Profil avatarları** - 16 farklı avatar seçeneği
 - **Renkli kullanıcılar** - Her kullanıcıya otomatik rastgele renk atanır
 - **Online kullanıcı sayacı** - Kaç kişinin aktif olduğunu görün
+- **WhatsApp Tarzı Tasarım** - Modern ve tanıdık kullanıcı arayüzü
+- **Mobil Hamburger Menü** - Mobilde kolay erişim için yan menü sistemi
 
 ### 🎯 Gelişmiş Özellikler
 - **Oda/Kanal sistemi** - Genel, Teknoloji ve Oyun odaları
+  - Her oda kendi mesaj geçmişini tutar (100 mesaj/oda)
+  - Oda değiştirdiğinizde o odanın geçmişi yüklenir
+  - Admin odaları oluşturabilir, silebilir ve yeniden adlandırabilir
 - **Gelişmiş Özel Mesaj (DM)** - Tam özellikli özel mesajlaşma sistemi
   - Özel mesaj penceresi
-  - Mesaj geçmişi
+  - Mesaj geçmişi (200 mesaj/kullanıcı)
   - Okunmamış mesaj sayacı
   - Anlık bildirimler
+  - Kalıcı mesaj geçmişi (kullanıcı başına)
 - **🎤 Sesli Sohbet (WebRTC)** - Gerçek zamanlı sesli görüşme
   - Kullanıcıdan kullanıcıya sesli arama
   - Mikrofon açma/kapama
@@ -145,13 +151,31 @@ http://localhost:3000
 
 ## 📝 Notlar
 
-- Mesaj geçmişi sunucu belleğinde tutulur (son 50 mesaj)
+### 💾 Veri Saklama
+- **Oda Mesajları**: Her oda için 100 mesaj (RAM'de)
+- **Özel Mesajlar**: Kullanıcı başına 200 mesaj (RAM'de)
+- **Loglar**: Son 1000 log + dosyada günlük kayıt (`logs/` klasörü)
+- **Session**: 24 saat (RAM'de)
+- ⚠️ **Önemli**: Sunucu yeniden başlatıldığında mesaj geçmişi silinir, sadece loglar dosyada kalır
+
+### 📱 Mobil Kullanım
+- **Hamburger Menü**: Sol üstteki ☰ simgesine tıklayarak odalar ve kullanıcılara erişin
+- **Otomatik Kapanma**: Oda veya kullanıcı seçtiğinizde menü otomatik kapanır
+- **Overlay**: Menü dışına tıklayarak kapatabilirsiniz
+- **Tam Ekran Chat**: Mobilde chat alanı tam ekran kullanılır
+
+### 🎨 Tasarım
+- **WhatsApp Stili**: Profesyonel ve tanıdık arayüz
+- **Responsive**: Tüm ekran boyutlarına uyumlu
+- **Dark Mode**: Göz dostu karanlık tema
+- **Animasyonlar**: Yumuşak geçişler ve fade-in efektleri
+
+### 🔧 Teknik Detaylar
 - Kullanıcı tercihleri (karanlık mod) localStorage'da saklanır
 - Ses bildirimleri tarayıcı izni gerektirebilir
 - Özel mesajlar sadece gönderen ve alıcı tarafından görülür
 - Her oda bağımsız mesaj akışına sahiptir
 - Dosya paylaşımı şu anda sadece resim formatlarını destekler
-- Loglar `logs/` klasöründe günlük olarak saklanır
 - Session bilgileri sunucu belleğinde tutulur
 - Her aktivite otomatik olarak loglanır
 - **Sesli sohbet için mikrofon izni gereklidir**
