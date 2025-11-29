@@ -41,10 +41,33 @@ Modern ve özellik dolu bir Node.js + Express + Socket.IO chat uygulaması.
   - Toplam mesaj sayısı
   - Yasaklı kullanıcı sayısı
   - Susturulmuş kullanıcı sayısı
+  - Aktif oturum sayısı
+  - Toplam log sayısı
 - **Gerçek Zamanlı İzleme**
   - Online kullanıcılar
   - Son mesajlar
   - Oda istatistikleri
+- **Detaylı Log Sistemi**
+  - Tüm aktiviteler loglanır
+  - Kimlik doğrulama logları
+  - Mesaj logları
+  - Admin işlem logları
+  - Sistem logları
+  - Log filtreleme (tip, kullanıcı)
+  - Log dışa aktarma (JSON)
+- **Oturum Yönetimi**
+  - Aktif oturumlar listesi
+  - Giriş geçmişi
+  - IP adresi takibi
+  - Son aktivite zamanı
+  - Oturum süresi
+
+### 🔐 Session Yönetimi
+- **Otomatik Giriş** - Kullanıcılar çıkış yapmadıkça hatırlanır
+- **24 Saat Oturum** - Session 24 saat boyunca geçerli
+- **Güvenli Session** - Express-session ile güvenli oturum yönetimi
+- **Çıkış Yapma** - Kullanıcılar istediği zaman çıkış yapabilir
+- **Session Takibi** - Her oturum benzersiz ID ile takip edilir
 
 ## 🚀 Hızlı Başlangıç
 
@@ -87,11 +110,20 @@ http://localhost:3000
 ### Admin İşlemleri
 1. **Admin Paneline Giriş**: `/admin.html` adresine gidin
 2. **Admin Kullanıcı Adları**: `admin` veya `onder7`
-3. **Kullanıcı Yönetimi**:
+3. **Panel Sekmeleri**:
+   - 👥 **Kullanıcılar**: Online kullanıcılar ve oda yönetimi
+   - � **Sohb:et**: Son mesajları görüntüleme
+   - �  **Loglar**: Detaylı aktivite logları ve filtreleme
+   - � **Otkurumlar**: Aktif oturumlar ve giriş geçmişi
+4. **Kullanıcı Yönetimi**:
    - ⚠️ Uyarı: Kullanıcıya özel uyarı mesajı gönderin
    - 🔇 Sustur: Kullanıcıyı belirli süre susturun
    - 👢 At: Kullanıcıyı odadan atın
    - 🚫 Yasakla: Kullanıcıyı kalıcı yasaklayın
+5. **Log Yönetimi**:
+   - Tip bazlı filtreleme (auth, message, admin, system)
+   - Kullanıcı bazlı arama
+   - JSON formatında dışa aktarma
 
 ## 🛠️ Teknolojiler
 
@@ -109,6 +141,9 @@ http://localhost:3000
 - Özel mesajlar sadece gönderen ve alıcı tarafından görülür
 - Her oda bağımsız mesaj akışına sahiptir
 - Dosya paylaşımı şu anda sadece resim formatlarını destekler
+- Loglar `logs/` klasöründe günlük olarak saklanır
+- Session bilgileri sunucu belleğinde tutulur
+- Her aktivite otomatik olarak loglanır
 
 ## 🎨 Özellik Detayları
 

@@ -252,20 +252,64 @@
             </div>
         </div>
 
-        <div class="content-grid">
-            <div class="panel">
-                <h2>👥 Online Kullanıcılar</h2>
-                <div class="user-list" id="userList"></div>
-            </div>
+        <div style="margin-bottom: 20px;">
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('users')">👥 Kullanıcılar</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('chat')">💬 Sohbet</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px; margin-right: 10px;" onclick="showTab('logs')">📋 Loglar</button>
+            <button class="btn" style="background: #667eea; color: white; padding: 12px 25px; border-radius: 10px;" onclick="showTab('sessions')">🔐 Oturumlar</button>
+        </div>
 
-            <div class="panel">
-                <h2>📁 Odalar</h2>
-                <div class="room-list" id="roomList"></div>
-            </div>
+        <div id="usersTab" class="tab-content">
+            <div class="content-grid">
+                <div class="panel">
+                    <h2>👥 Online Kullanıcılar</h2>
+                    <div class="user-list" id="userList"></div>
+                </div>
 
-            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel">
+                    <h2>📁 Odalar</h2>
+                    <div class="room-list" id="roomList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="chatTab" class="tab-content" style="display: none;">
+            <div class="panel">
                 <h2>💬 Son Mesajlar</h2>
                 <div class="message-list" id="messageList"></div>
+            </div>
+        </div>
+
+        <div id="logsTab" class="tab-content" style="display: none;">
+            <div class="panel">
+                <h2>📋 Aktivite Logları</h2>
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <select id="logTypeFilter" style="padding: 8px; border-radius: 5px; border: 2px solid #eee;">
+                        <option value="">Tüm Tipler</option>
+                        <option value="auth">Kimlik Doğrulama</option>
+                        <option value="message">Mesajlar</option>
+                        <option value="admin">Admin İşlemleri</option>
+                        <option value="system">Sistem</option>
+                    </select>
+                    <input type="text" id="logUserFilter" placeholder="Kullanıcı ara..." style="padding: 8px; border-radius: 5px; border: 2px solid #eee; flex: 1;">
+                    <button class="btn" style="background: #667eea; color: white; padding: 8px 20px; border-radius: 5px;" onclick="filterLogs()">Filtrele</button>
+                    <button class="btn" style="background: #4caf50; color: white; padding: 8px 20px; border-radius: 5px;" onclick="exportLogs()">📥 Dışa Aktar</button>
+                </div>
+                <div class="message-list" id="logList" style="max-height: 600px;"></div>
+            </div>
+        </div>
+
+        <div id="sessionsTab" class="tab-content" style="display: none;">
+            <div class="content-grid">
+                <div class="panel">
+                    <h2>🔐 Aktif Oturumlar</h2>
+                    <div class="user-list" id="sessionList"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>📊 Giriş Geçmişi</h2>
+                    <div class="user-list" id="loginHistoryList"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -303,10 +347,146 @@
             showAlert(msg, "error");
         });
 
+        let currentTab = 'users';
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            if (tab === 'logs') {
+                loadLogs();
+            } else if (tab === 'sessions') {
+                loadSessions();
+            }
+        }
+
         function loadAdminData() {
             socket.emit("getAdminStats");
             socket.emit("getOnlineUsers");
         }
+
+        function loadLogs() {
+            socket.emit("getAdminLogs", { limit: 100 });
+        }
+
+        function loadSessions() {
+            socket.emit("getActiveSessions");
+            socket.emit("getLoginHistory");
+        }
+
+        function filterLogs() {
+            const type = document.getElementById("logTypeFilter").value;
+            const user = document.getElementById("logUserFilter").value;
+            socket.emit("getAdminLogs", { type, user, limit: 100 });
+        }
+
+        function exportLogs() {
+            fetch('/api/logs?limit=1000')
+                .then(res => res.json())
+                .then(logs => {
+                    const dataStr = JSON.stringify(logs, null, 2);
+                    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `chat-logs-${new Date().toISOString()}.json`;
+                    link.click();
+                    showAlert("Loglar başarıyla dışa aktarıldı!", "success");
+                })
+                .catch(err => showAlert("Hata: " + err.message, "error"));
+        }
+
+        socket.on("adminLogs", (logs) => {
+            const logList = document.getElementById("logList");
+            logList.innerHTML = "";
+            
+            logs.forEach(log => {
+                const div = document.createElement("div");
+                div.className = "message-item";
+                
+                const typeColors = {
+                    auth: "#4caf50",
+                    message: "#2196f3",
+                    admin: "#ff9800",
+                    system: "#9e9e9e"
+                };
+                
+                const typeIcons = {
+                    auth: "🔐",
+                    message: "💬",
+                    admin: "🛡️",
+                    system: "⚙️"
+                };
+                
+                div.innerHTML = `
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <span style="font-size: 20px;">${typeIcons[log.type] || "📝"}</span>
+                            <span style="background: ${typeColors[log.type]}; color: white; padding: 2px 8px; border-radius: 5px; font-size: 11px;">${log.type.toUpperCase()}</span>
+                            <strong>${log.user}</strong>
+                            <span style="color: #999; font-size: 12px;">${log.action}</span>
+                            <span style="color: #999; font-size: 12px; margin-left: auto;">${log.time}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-left: 30px;">
+                            ${log.details.reason ? `Sebep: ${log.details.reason}<br>` : ''}
+                            ${log.details.target ? `Hedef: ${log.details.target}<br>` : ''}
+                            ${log.details.ip ? `IP: ${log.details.ip}<br>` : ''}
+                            ${log.details.sessionId ? `Session: ${log.details.sessionId.substring(0, 8)}...` : ''}
+                        </div>
+                    </div>
+                `;
+                logList.appendChild(div);
+            });
+        });
+
+        socket.on("activeSessions", (sessions) => {
+            const sessionList = document.getElementById("sessionList");
+            sessionList.innerHTML = "";
+            
+            sessions.forEach(session => {
+                const div = document.createElement("div");
+                div.className = "user-item";
+                div.innerHTML = `
+                    <div>
+                        <div class="user-info">
+                            <span class="user-avatar">${session.avatar}</span>
+                            <span class="user-name">${session.username}</span>
+                            ${session.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        </div>
+                        <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                            Giriş: ${session.loginTime}<br>
+                            Son Aktivite: ${session.lastActivity}<br>
+                            IP: ${session.ip}<br>
+                            Oda: ${session.room}
+                        </div>
+                    </div>
+                `;
+                sessionList.appendChild(div);
+            });
+        });
+
+        socket.on("loginHistory", (history) => {
+            const historyList = document.getElementById("loginHistoryList");
+            historyList.innerHTML = "";
+            
+            history.forEach(entry => {
+                const div = document.createElement("div");
+                div.className = "user-item";
+                div.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-avatar">${entry.avatar}</span>
+                        <span class="user-name">${entry.username}</span>
+                        ${entry.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                    </div>
+                    <div style="font-size: 11px; color: #666;">
+                        ${entry.loginTime}<br>
+                        IP: ${entry.ip}
+                    </div>
+                `;
+                historyList.appendChild(div);
+            });
+        });
 
         socket.on("adminStats", (stats) => {
             document.getElementById("totalUsers").textContent = stats.totalUsers;

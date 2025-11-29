@@ -1,12 +1,39 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const session = require("express-session");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// Session yapılandırması
+const sessionMiddleware = session({
+  secret: "onder7-chat-secret-key",
+  resave: false,
+  saveUninitialized: true,
+  cookie: { 
+    maxAge: 24 * 60 * 60 * 1000, // 24 saat
+    secure: false 
+  }
+});
+
+app.use(sessionMiddleware);
 app.use(express.static("public"));
+app.use(express.json());
+
+// Socket.IO ile session paylaşımı
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, {}, next);
+});
+
+// Log dosyası yolu
+const LOG_DIR = path.join(__dirname, "logs");
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR);
+}
 
 app.get("/test", (req, res) => {
   res.send("Node.js ÇALIŞIYOR ✔");
@@ -14,6 +41,7 @@ app.get("/test", (req, res) => {
 
 let onlineUsers = 0;
 const users = new Map(); // Kullanıcı bilgilerini sakla
+const sessions = new Map(); // Session bilgileri (sessionId -> userData)
 const messageHistory = []; // Son 50 mesajı sakla
 const MAX_HISTORY = 50;
 const rooms = new Map(); // Oda sistemi
@@ -22,15 +50,58 @@ const privateMessages = new Map(); // Özel mesaj geçmişi (socketId -> mesajla
 const admins = new Set(["admin", "onder7"]); // Admin kullanıcı adları
 const bannedUsers = new Set(); // Yasaklı kullanıcılar
 const mutedUsers = new Map(); // Susturulmuş kullanıcılar (socketId -> süre)
+const activityLogs = []; // Tüm aktivite logları
+const loginHistory = []; // Giriş geçmişi
+const MAX_LOGS = 1000;
 
 // Varsayılan odalar
 rooms.set("genel", { name: "Genel", users: new Set() });
 rooms.set("teknoloji", { name: "Teknoloji", users: new Set() });
 rooms.set("oyun", { name: "Oyun", users: new Set() });
 
+// Log fonksiyonu
+function addLog(type, action, user, details = {}) {
+  const logEntry = {
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    timestamp: new Date().toISOString(),
+    time: new Date().toLocaleString("tr-TR"),
+    type, // "auth", "message", "admin", "system"
+    action, // "login", "logout", "send_message", "kick", "ban", etc.
+    user: user || "System",
+    details,
+    ip: details.ip || "unknown"
+  };
+  
+  activityLogs.unshift(logEntry);
+  if (activityLogs.length > MAX_LOGS) {
+    activityLogs.pop();
+  }
+  
+  // Log dosyasına yaz
+  const logFile = path.join(LOG_DIR, `chat-${new Date().toISOString().split('T')[0]}.log`);
+  fs.appendFileSync(logFile, JSON.stringify(logEntry) + "\n");
+  
+  return logEntry;
+}
+
 io.on("connection", (socket) => {
   onlineUsers++;
-  console.log("Kullanıcı bağlandı:", socket.id, "- Toplam:", onlineUsers);
+  const sessionId = socket.request.session.id;
+  const ip = socket.handshake.address;
+  
+  console.log("Kullanıcı bağlandı:", socket.id, "Session:", sessionId, "IP:", ip);
+  
+  addLog("system", "connection", "Anonymous", { 
+    socketId: socket.id, 
+    sessionId,
+    ip 
+  });
+  
+  // Session'dan kullanıcı bilgisi varsa otomatik giriş yap
+  if (socket.request.session.userData) {
+    const userData = socket.request.session.userData;
+    socket.emit("autoLogin", userData);
+  }
   
   // Yeni kullanıcıya hoş geldin mesajı
   socket.emit("serverMessage", "Socket.IO çalışıyor! Hoş geldin! 🎉");
@@ -44,24 +115,66 @@ io.on("connection", (socket) => {
   // Kullanıcı adı ve profil resmi ayarla
   socket.on("setUsername", (data) => {
     const { username, avatar } = data;
+    const sessionId = socket.request.session.id;
+    const ip = socket.handshake.address;
     
     // Yasaklı kullanıcı kontrolü
     if (bannedUsers.has(username)) {
       socket.emit("banned", "Bu kullanıcı adı yasaklanmıştır!");
+      addLog("auth", "login_failed", username, { 
+        reason: "banned", 
+        socketId: socket.id,
+        sessionId,
+        ip 
+      });
       return;
     }
     
     const color = '#' + Math.floor(Math.random()*16777215).toString(16);
     const isAdmin = admins.has(username);
-    users.set(socket.id, { 
+    const loginTime = new Date();
+    
+    const userData = { 
       username, 
       color, 
       avatar: avatar || "👤", 
       room: "genel",
       isAdmin,
-      socketId: socket.id
-    });
+      socketId: socket.id,
+      sessionId,
+      ip,
+      loginTime: loginTime.toISOString(),
+      lastActivity: loginTime.toISOString()
+    };
+    
+    users.set(socket.id, userData);
+    sessions.set(sessionId, userData);
+    
+    // Session'a kaydet
+    socket.request.session.userData = userData;
+    socket.request.session.save();
+    
     socket.emit("userColor", color);
+    
+    // Giriş geçmişine ekle
+    loginHistory.unshift({
+      username,
+      avatar,
+      isAdmin,
+      loginTime: loginTime.toLocaleString("tr-TR"),
+      ip,
+      sessionId
+    });
+    if (loginHistory.length > 100) loginHistory.pop();
+    
+    // Log ekle
+    addLog("auth", "login", username, { 
+      avatar, 
+      isAdmin, 
+      socketId: socket.id,
+      sessionId,
+      ip 
+    });
     
     // Admin ise bildir
     if (isAdmin) {
@@ -113,6 +226,17 @@ io.on("connection", (socket) => {
     if (messageHistory.length > MAX_HISTORY) {
       messageHistory.shift();
     }
+    
+    // Log ekle
+    addLog("message", "send", user.username, { 
+      room, 
+      messageLength: msg.length,
+      socketId: socket.id,
+      ip: user.ip
+    });
+    
+    // Son aktiviteyi güncelle
+    user.lastActivity = new Date().toISOString();
     
     io.to(room).emit("chatMessage", messageData);
   });
@@ -277,7 +401,7 @@ io.on("connection", (socket) => {
     }
     
     const { action, targetId, reason, duration } = data;
-    const targetUser = Array.from(users.entries()).find(([id, u]) => id.substring(0, 6) === targetId);
+    const targetUser = Array.from(users.entries()).find(([id]) => id.substring(0, 6) === targetId);
     
     if (!targetUser) {
       socket.emit("error", "Kullanıcı bulunamadı!");
@@ -285,6 +409,16 @@ io.on("connection", (socket) => {
     }
     
     const [targetSocketId, targetUserData] = targetUser;
+    
+    // Log ekle
+    addLog("admin", action, user.username, { 
+      target: targetUserData.username,
+      reason,
+      duration,
+      socketId: socket.id,
+      targetSocketId,
+      ip: user.ip
+    });
     
     switch(action) {
       case "kick":
@@ -301,7 +435,7 @@ io.on("connection", (socket) => {
         break;
         
       case "mute":
-        mutedUsers.set(targetSocketId, Date.now() + (duration || 300000)); // Varsayılan 5 dakika
+        mutedUsers.set(targetSocketId, Date.now() + (duration || 300000));
         io.to(targetSocketId).emit("muted", `${duration/1000} saniye susturuldunuz!`);
         io.emit("serverMessage", `🔇 ${targetUserData.username} admin tarafından susturuldu!`);
         break;
@@ -331,6 +465,8 @@ io.on("connection", (socket) => {
       totalRooms: rooms.size,
       bannedCount: bannedUsers.size,
       mutedCount: mutedUsers.size,
+      totalSessions: sessions.size,
+      totalLogs: activityLogs.length,
       roomStats: Array.from(rooms.entries()).map(([id, room]) => ({
         id,
         name: room.name,
@@ -340,6 +476,69 @@ io.on("connection", (socket) => {
     };
     
     socket.emit("adminStats", stats);
+  });
+  
+  // Admin log listesi
+  socket.on("getAdminLogs", (filter) => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) return;
+    
+    let logs = activityLogs;
+    
+    // Filtrele
+    if (filter && filter.type) {
+      logs = logs.filter(log => log.type === filter.type);
+    }
+    if (filter && filter.user) {
+      logs = logs.filter(log => log.user.toLowerCase().includes(filter.user.toLowerCase()));
+    }
+    if (filter && filter.limit) {
+      logs = logs.slice(0, filter.limit);
+    }
+    
+    socket.emit("adminLogs", logs);
+  });
+  
+  // Giriş geçmişi
+  socket.on("getLoginHistory", () => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) return;
+    
+    socket.emit("loginHistory", loginHistory);
+  });
+  
+  // Aktif sessionlar
+  socket.on("getActiveSessions", () => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) return;
+    
+    const activeSessions = Array.from(sessions.entries()).map(([sessionId, userData]) => ({
+      sessionId,
+      username: userData.username,
+      avatar: userData.avatar,
+      isAdmin: userData.isAdmin,
+      loginTime: new Date(userData.loginTime).toLocaleString("tr-TR"),
+      lastActivity: new Date(userData.lastActivity).toLocaleString("tr-TR"),
+      ip: userData.ip,
+      room: userData.room
+    }));
+    
+    socket.emit("activeSessions", activeSessions);
+  });
+  
+  // Çıkış yap
+  socket.on("logout", () => {
+    const user = users.get(socket.id);
+    if (user) {
+      addLog("auth", "logout", user.username, { 
+        socketId: socket.id,
+        sessionId: user.sessionId,
+        ip: user.ip
+      });
+      
+      // Session'ı temizle
+      socket.request.session.destroy();
+    }
   });
   
   // Kullanıcı yazıyor bildirimi
@@ -357,6 +556,13 @@ io.on("connection", (socket) => {
     const room = userRooms.get(socket.id);
     
     if (user && room) {
+      addLog("system", "disconnect", user.username, { 
+        socketId: socket.id,
+        sessionId: user.sessionId,
+        ip: user.ip,
+        duration: Date.now() - new Date(user.loginTime).getTime()
+      });
+      
       io.to(room).emit("serverMessage", `${user.username} ayrıldı 👋`);
       rooms.get(room)?.users.delete(socket.id);
       users.delete(socket.id);
@@ -368,6 +574,24 @@ io.on("connection", (socket) => {
     console.log("Kullanıcı ayrıldı:", socket.id, "- Toplam:", onlineUsers);
     io.emit("userCount", onlineUsers);
   });
+});
+
+// API endpoint'leri
+app.get("/api/stats", (req, res) => {
+  res.json({
+    onlineUsers,
+    totalMessages: messageHistory.length,
+    totalRooms: rooms.size,
+    bannedUsers: bannedUsers.size,
+    mutedUsers: mutedUsers.size,
+    activeSessions: sessions.size
+  });
+});
+
+app.get("/api/logs", (req, res) => {
+  // Sadece admin erişebilir (basit kontrol)
+  const limit = parseInt(req.query.limit) || 50;
+  res.json(activityLogs.slice(0, limit));
 });
 
 const PORT = process.env.PORT || 3000;

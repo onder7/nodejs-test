@@ -723,6 +723,21 @@
             }
         });
         
+        // Otomatik giriş (session varsa)
+        socket.on("autoLogin", (userData) => {
+            username = userData.username;
+            selectedAvatar = userData.avatar;
+            userColor = userData.color;
+            isAdmin = userData.isAdmin;
+            
+            // Modal'ı kapat ve kullanıcı bilgilerini ayarla
+            usernameModal.style.display = "none";
+            socket.emit("setUsername", { username, avatar: selectedAvatar });
+            messageInput.focus();
+            
+            showNotification(`Tekrar hoş geldin, ${username}! 👋`);
+        });
+
         // Kullanıcı adı modal
         usernameBtn.addEventListener("click", () => {
             const name = usernameInput.value.trim();
@@ -739,6 +754,20 @@
         });
         
         setTimeout(() => usernameInput.focus(), 100);
+        
+        // Çıkış yap butonu ekle (header'a)
+        const logoutBtn = document.createElement("button");
+        logoutBtn.className = "theme-toggle";
+        logoutBtn.textContent = "🚪";
+        logoutBtn.title = "Çıkış Yap";
+        logoutBtn.onclick = () => {
+            if (confirm("Çıkış yapmak istediğinizden emin misiniz?")) {
+                socket.emit("logout");
+                localStorage.clear();
+                window.location.reload();
+            }
+        };
+        document.querySelector(".header-right").insertBefore(logoutBtn, document.querySelector(".header-right").firstChild);
         
         // Ses bildirimi
         function playNotificationSound() {
