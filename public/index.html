@@ -26,7 +26,7 @@
     <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="voice-call-modal" id="voiceCallModal">
+    <div class="voice-call-modal" id="voiceCallModal"></div>
         <div class="voice-call-avatar" id="voiceCallAvatar">👤</div>
         <div class="voice-call-name" id="voiceCallName">Kullanıcı</div>
         <div class="voice-call-status" id="voiceCallStatus">Aranıyor...</div>
@@ -75,8 +75,11 @@
         <div class="container">
             <div class="header">
                 <div class="header-left">
-                    <h1 id="roomTitle">💬 Genel</h1>
-                    <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
+                    <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+                    <div>
+                        <h1 id="roomTitle">💬 Genel</h1>
+                        <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
+                    </div>
                 </div>
                 <div class="header-right">
                     <div class="user-info-header" id="userInfoHeader" style="display: none;">
@@ -126,6 +129,9 @@
         const roomTitle = document.getElementById("roomTitle");
         const fileBtn = document.getElementById("fileBtn");
         const fileInput = document.getElementById("fileInput");
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const sidebarOverlay = document.getElementById("sidebarOverlay");
+        const sidebar = document.querySelector(".sidebar");
 
         let typingTimer;
         let username = "";
@@ -362,6 +368,7 @@
                     currentRoom = room.id;
                     messagesDiv.innerHTML = '<div class="system-message">Odaya Hoş Geldiniz! 👋</div>';
                     roomTitle.textContent = `💬 ${room.name}`;
+                    closeMobileSidebar();
                 };
                 roomList.appendChild(div);
             });
@@ -390,7 +397,10 @@
                         <button class="voice-icon-btn" onclick="startVoiceCall('${user.id}', '${user.username}', '${user.avatar}'); event.stopPropagation();" title="Sesli Arama">📞</button>
                     </div>
                 `;
-                div.onclick = () => openDM(user.id, user.username);
+                div.onclick = () => {
+                    openDM(user.id, user.username);
+                    closeMobileSidebar();
+                };
                 userList.appendChild(div);
             });
         });
@@ -825,10 +835,30 @@
             }
         }
         
-        // Buton olaylar─▒
+        // Buton olayları
         document.getElementById("rejectCallBtn").onclick = endVoiceCall;
         document.getElementById("endCallBtn").onclick = endVoiceCall;
         document.getElementById("muteBtn").onclick = toggleMute;
+        
+        // Hamburger menü toggle
+        hamburgerBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            sidebarOverlay.classList.toggle("show");
+        });
+        
+        // Overlay'e tıklandığında menüyü kapat
+        sidebarOverlay.addEventListener("click", () => {
+            sidebar.classList.remove("open");
+            sidebarOverlay.classList.remove("show");
+        });
+        
+        // Oda veya kullanıcı seçildiğinde mobilde menüyü kapat
+        function closeMobileSidebar() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove("open");
+                sidebarOverlay.classList.remove("show");
+            }
+        }
         
     </script>
 </body>
