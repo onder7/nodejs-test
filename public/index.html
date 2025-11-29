@@ -248,9 +248,32 @@
         }
         .header-left h1 { font-size: 24px; margin-bottom: 5px; }
         .online { font-size: 14px; opacity: 0.9; }
+        .user-info-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .user-info-header:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .user-info-header .avatar {
+            font-size: 20px;
+        }
+        .user-info-header .username {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         .header-right {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
         .theme-toggle, .file-btn {
             background: rgba(255,255,255,0.2);
@@ -603,6 +626,10 @@
                     <div class="online">🟢 Online: <span id="userCount">0</span> kullanıcı</div>
                 </div>
                 <div class="header-right">
+                    <div class="user-info-header" id="userInfoHeader" style="display: none;">
+                        <span class="avatar" id="headerAvatar">👤</span>
+                        <span class="username" id="headerUsername">Kullanıcı</span>
+                    </div>
                     <input type="file" id="fileInput" class="file-upload" accept="image/*">
                     <button class="file-btn" id="fileBtn" title="Dosya Gönder">📎</button>
                     <button class="theme-toggle" id="themeToggle">🌙</button>
@@ -735,8 +762,29 @@
             socket.emit("setUsername", { username, avatar: selectedAvatar });
             messageInput.focus();
             
+            // Header'da kullanıcı bilgisini göster
+            updateHeaderUserInfo();
+            
             showNotification(`Tekrar hoş geldin, ${username}! 👋`);
         });
+
+        // Header'da kullanıcı bilgisini güncelle
+        function updateHeaderUserInfo() {
+            const userInfoHeader = document.getElementById("userInfoHeader");
+            const headerAvatar = document.getElementById("headerAvatar");
+            const headerUsername = document.getElementById("headerUsername");
+            
+            if (username) {
+                headerAvatar.textContent = selectedAvatar;
+                headerUsername.textContent = username;
+                if (isAdmin) {
+                    headerUsername.innerHTML = `${username} <span class="admin-badge">ADMIN</span>`;
+                }
+                userInfoHeader.style.display = "flex";
+            } else {
+                userInfoHeader.style.display = "none";
+            }
+        }
 
         // Kullanıcı adı modal
         usernameBtn.addEventListener("click", () => {
@@ -746,6 +794,9 @@
                 socket.emit("setUsername", { username, avatar: selectedAvatar });
                 usernameModal.style.display = "none";
                 messageInput.focus();
+                
+                // Header'da kullanıcı bilgisini göster
+                updateHeaderUserInfo();
             }
         });
         
@@ -970,6 +1021,8 @@
             isAdmin = status;
             if (isAdmin) {
                 showNotification("🛡️ Admin yetkileriniz aktif!");
+                // Header'da admin badge'i göster
+                updateHeaderUserInfo();
             }
         });
 
