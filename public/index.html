@@ -1048,6 +1048,16 @@
             alert("⚠️ UYARI: " + reason);
         });
 
+        socket.on("roomDeleted", (message) => {
+            showNotification(message);
+            currentRoom = "genel";
+            roomTitle.textContent = "💬 Genel";
+        });
+
+        socket.on("chatHistoryCleared", () => {
+            messagesDiv.innerHTML = '<div class="system-message">Sohbet geçmişi admin tarafından temizlendi</div>';
+        });
+
         // Mesaj gönder
         function sendMessage() {
             const msg = messageInput.value.trim();

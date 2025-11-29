@@ -541,6 +541,167 @@ io.on("connection", (socket) => {
     }
   });
   
+  // Admin - Oda oluştur
+  socket.on("createRoom", (data) => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) {
+      socket.emit("error", "Bu işlem için yetkiniz yok!");
+      return;
+    }
+    
+    const { roomId, roomName } = data;
+    if (rooms.has(roomId)) {
+      socket.emit("error", "Bu oda zaten mevcut!");
+      return;
+    }
+    
+    rooms.set(roomId, { name: roomName, users: new Set() });
+    
+    addLog("admin", "create_room", user.username, { 
+      roomId,
+      roomName,
+      socketId: socket.id,
+      ip: user.ip
+    });
+    
+    io.emit("roomList", Array.from(rooms.entries()).map(([id, room]) => ({ 
+      id, 
+      name: room.name, 
+      userCount: room.users.size 
+    })));
+    
+    socket.emit("adminActionSuccess", `Oda oluşturuldu: ${roomName}`);
+  });
+  
+  // Admin - Oda sil
+  socket.on("deleteRoom", (roomId) => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) {
+      socket.emit("error", "Bu işlem için yetkiniz yok!");
+      return;
+    }
+    
+    if (!rooms.has(roomId)) {
+      socket.emit("error", "Oda bulunamadı!");
+      return;
+    }
+    
+    if (roomId === "genel") {
+      socket.emit("error", "Genel oda silinemez!");
+      return;
+    }
+    
+    const room = rooms.get(roomId);
+    
+    // Odadaki kullanıcıları genel odaya taşı
+    room.users.forEach(userId => {
+      const targetUser = users.get(userId);
+      if (targetUser) {
+        io.to(userId).emit("roomDeleted", "Bulunduğunuz oda silindi, genel odaya yönlendiriliyorsunuz.");
+        io.to(userId).socketsLeave(roomId);
+        io.to(userId).socketsJoin("genel");
+        rooms.get("genel").users.add(userId);
+        userRooms.set(userId, "genel");
+        targetUser.room = "genel";
+      }
+    });
+    
+    rooms.delete(roomId);
+    
+    addLog("admin", "delete_room", user.username, { 
+      roomId,
+      roomName: room.name,
+      socketId: socket.id,
+      ip: user.ip
+    });
+    
+    io.emit("roomList", Array.from(rooms.entries()).map(([id, room]) => ({ 
+      id, 
+      name: room.name, 
+      userCount: room.users.size 
+    })));
+    
+    socket.emit("adminActionSuccess", `Oda silindi: ${room.name}`);
+  });
+  
+  // Admin - Oda adını değiştir
+  socket.on("renameRoom", (data) => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) {
+      socket.emit("error", "Bu işlem için yetkiniz yok!");
+      return;
+    }
+    
+    const { roomId, newName } = data;
+    if (!rooms.has(roomId)) {
+      socket.emit("error", "Oda bulunamadı!");
+      return;
+    }
+    
+    const room = rooms.get(roomId);
+    const oldName = room.name;
+    room.name = newName;
+    
+    addLog("admin", "rename_room", user.username, { 
+      roomId,
+      oldName,
+      newName,
+      socketId: socket.id,
+      ip: user.ip
+    });
+    
+    io.emit("roomList", Array.from(rooms.entries()).map(([id, room]) => ({ 
+      id, 
+      name: room.name, 
+      userCount: room.users.size 
+    })));
+    
+    io.to(roomId).emit("serverMessage", `Oda adı değiştirildi: ${newName}`);
+    socket.emit("adminActionSuccess", `Oda adı değiştirildi: ${oldName} → ${newName}`);
+  });
+  
+  // Admin - Sohbet geçmişini temizle
+  socket.on("clearChatHistory", () => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) {
+      socket.emit("error", "Bu işlem için yetkiniz yok!");
+      return;
+    }
+    
+    const messageCount = messageHistory.length;
+    messageHistory.length = 0;
+    
+    addLog("admin", "clear_chat", user.username, { 
+      messageCount,
+      socketId: socket.id,
+      ip: user.ip
+    });
+    
+    io.emit("chatHistoryCleared");
+    socket.emit("adminActionSuccess", `${messageCount} mesaj silindi!`);
+  });
+  
+  // Admin - Tüm kullanıcıları getir
+  socket.on("getAllUsers", () => {
+    const user = users.get(socket.id);
+    if (!user || !user.isAdmin) return;
+    
+    const allUsers = Array.from(users.entries()).map(([id, userData]) => ({
+      id: id.substring(0, 6),
+      fullId: id,
+      username: userData.username,
+      avatar: userData.avatar,
+      color: userData.color,
+      isAdmin: userData.isAdmin,
+      room: userData.room,
+      loginTime: new Date(userData.loginTime).toLocaleString("tr-TR"),
+      lastActivity: new Date(userData.lastActivity).toLocaleString("tr-TR"),
+      ip: userData.ip
+    }));
+    
+    socket.emit("allUsers", allUsers);
+  });
+  
   // Kullanıcı yazıyor bildirimi
   socket.on("typing", (isTyping) => {
     const user = users.get(socket.id) || { username: "Misafir" };

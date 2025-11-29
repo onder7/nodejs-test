@@ -267,7 +267,12 @@
                 </div>
 
                 <div class="panel">
-                    <h2>📁 Odalar</h2>
+                    <h2>📁 Oda Yönetimi</h2>
+                    <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                        <input type="text" id="newRoomId" placeholder="Oda ID (örn: muzik)" style="padding: 8px; border-radius: 5px; border: 2px solid #eee; flex: 1;">
+                        <input type="text" id="newRoomName" placeholder="Oda Adı (örn: Müzik)" style="padding: 8px; border-radius: 5px; border: 2px solid #eee; flex: 1;">
+                        <button class="btn" style="background: #4caf50; color: white; padding: 8px 20px; border-radius: 5px;" onclick="createRoom()">➕ Oda Oluştur</button>
+                    </div>
                     <div class="room-list" id="roomList"></div>
                 </div>
             </div>
@@ -275,7 +280,10 @@
 
         <div id="chatTab" class="tab-content" style="display: none;">
             <div class="panel">
-                <h2>💬 Son Mesajlar</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>💬 Son Mesajlar</h2>
+                    <button class="btn btn-ban" onclick="clearChatHistory()">🗑️ Tüm Sohbet Geçmişini Sil</button>
+                </div>
                 <div class="message-list" id="messageList"></div>
             </div>
         </div>
@@ -363,7 +371,40 @@
 
         function loadAdminData() {
             socket.emit("getAdminStats");
-            socket.emit("getOnlineUsers");
+            socket.emit("getAllUsers");
+        }
+        
+        function createRoom() {
+            const roomId = document.getElementById("newRoomId").value.trim();
+            const roomName = document.getElementById("newRoomName").value.trim();
+            
+            if (!roomId || !roomName) {
+                showAlert("Lütfen oda ID ve adını girin!", "error");
+                return;
+            }
+            
+            socket.emit("createRoom", { roomId, roomName });
+            document.getElementById("newRoomId").value = "";
+            document.getElementById("newRoomName").value = "";
+        }
+        
+        function deleteRoom(roomId, roomName) {
+            if (confirm(`"${roomName}" odasını silmek istediğinizden emin misiniz?\n\nOdadaki tüm kullanıcılar genel odaya taşınacak.`)) {
+                socket.emit("deleteRoom", roomId);
+            }
+        }
+        
+        function renameRoom(roomId, oldName) {
+            const newName = prompt(`"${oldName}" odasının yeni adı:`, oldName);
+            if (newName && newName.trim() !== oldName) {
+                socket.emit("renameRoom", { roomId, newName: newName.trim() });
+            }
+        }
+        
+        function clearChatHistory() {
+            if (confirm("TÜM SOHBET GEÇMİŞİNİ SİLMEK İSTEDİĞİNİZDEN EMİN MİSİNİZ?\n\nBu işlem geri alınamaz!")) {
+                socket.emit("clearChatHistory");
+            }
         }
 
         function loadLogs() {
@@ -488,6 +529,32 @@
             });
         });
 
+        socket.on("allUsers", (users) => {
+            const userList = document.getElementById("userList");
+            userList.innerHTML = "";
+            users.forEach(user => {
+                if (user.username === adminUsername) return; // Kendini gösterme
+                
+                const div = document.createElement("div");
+                div.className = "user-item";
+                div.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-avatar">${user.avatar}</span>
+                        <span class="user-name" style="color: ${user.color}">${user.username}</span>
+                        ${user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        <span style="font-size: 11px; color: #999; margin-left: 10px;">Oda: ${user.room}</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-warn" onclick="warnUser('${user.id}', '${user.username}')">⚠️</button>
+                        <button class="btn btn-mute" onclick="muteUser('${user.id}', '${user.username}')">🔇</button>
+                        <button class="btn btn-kick" onclick="kickUser('${user.id}', '${user.username}')">👢</button>
+                        <button class="btn btn-ban" onclick="banUser('${user.id}', '${user.username}')">🚫</button>
+                    </div>
+                `;
+                userList.appendChild(div);
+            });
+        });
+
         socket.on("adminStats", (stats) => {
             document.getElementById("totalUsers").textContent = stats.totalUsers;
             document.getElementById("totalMessages").textContent = stats.totalMessages;
@@ -501,9 +568,13 @@
                 const div = document.createElement("div");
                 div.className = "room-item";
                 div.innerHTML = `
-                    <div>
+                    <div style="flex: 1;">
                         <strong>${room.name}</strong>
-                        <div style="font-size: 12px; color: #666;">${room.userCount} kullanıcı</div>
+                        <div style="font-size: 12px; color: #666;">${room.userCount} kullanıcı • ID: ${room.id}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn" style="background: #2196f3; color: white; padding: 6px 12px; border-radius: 5px;" onclick="renameRoom('${room.id}', '${room.name}')">✏️</button>
+                        ${room.id !== 'genel' ? `<button class="btn btn-ban" style="padding: 6px 12px; border-radius: 5px;" onclick="deleteRoom('${room.id}', '${room.name}')">🗑️</button>` : ''}
                     </div>
                 `;
                 roomList.appendChild(div);
@@ -530,29 +601,13 @@
             });
         });
 
-        socket.on("onlineUsers", (users) => {
-            const userList = document.getElementById("userList");
-            userList.innerHTML = "";
-            users.forEach(user => {
-                if (user.username === adminUsername) return; // Kendini gösterme
-                
-                const div = document.createElement("div");
-                div.className = "user-item";
-                div.innerHTML = `
-                    <div class="user-info">
-                        <span class="user-avatar">${user.avatar}</span>
-                        <span class="user-name" style="color: ${user.color}">${user.username}</span>
-                        ${user.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-warn" onclick="warnUser('${user.id}', '${user.username}')">⚠️</button>
-                        <button class="btn btn-mute" onclick="muteUser('${user.id}', '${user.username}')">🔇</button>
-                        <button class="btn btn-kick" onclick="kickUser('${user.id}', '${user.username}')">👢</button>
-                        <button class="btn btn-ban" onclick="banUser('${user.id}', '${user.username}')">🚫</button>
-                    </div>
-                `;
-                userList.appendChild(div);
-            });
+        socket.on("chatHistoryCleared", () => {
+            const messageList = document.getElementById("messageList");
+            messageList.innerHTML = '<div class="system-message" style="text-align: center; padding: 20px; color: #999;">Sohbet geçmişi temizlendi</div>';
+        });
+        
+        socket.on("roomDeleted", (message) => {
+            showAlert(message, "warning");
         });
 
         function warnUser(userId, username) {
